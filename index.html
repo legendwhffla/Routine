@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>조작형 습관 및 일일 목표 관리 대시보드</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,6 +31,7 @@
         * {
             box-sizing: border-box;
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -38,6 +39,7 @@
             color: var(--text-color);
             transition: background-color 0.25s ease, color 0.25s ease;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Theme Surface & Typography Utilities */
@@ -78,6 +80,15 @@
             outline: none;
             border-color: var(--color-hover);
             box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-point) 45%, transparent);
+        }
+
+        /* Hide scrollbar utility for clean mobile horizontal bars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
         /* =========================================================
@@ -355,7 +366,7 @@
             background: transparent;
             border: none;
             color: var(--subtext-color);
-            padding: 0.35rem;
+            padding: 0.25rem;
             border-radius: 9999px;
             display: inline-flex;
             align-items: center;
@@ -397,6 +408,26 @@
             transform: scale(1.05);
         }
 
+        /* Mobile Day Column inside Habit Card */
+        @media (max-width: 767px) {
+            .mobile-day-box {
+                border-radius: 10px;
+                padding: 4px 2px 6px 2px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+            .mobile-day-box.is-today {
+                background-color: color-mix(in srgb, var(--color-accent) 45%, var(--bg-main));
+            }
+            .mobile-check-cell {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+            }
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -426,77 +457,90 @@
 
     <!-- Top Navigation & Theme Bar -->
     <header class="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 border-b theme-border" style="background-color: color-mix(in srgb, var(--bg-box) 88%, transparent);">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
-            <!-- Brand Title + Borderless Header Settings Button -->
-            <div class="flex items-center gap-3">
-                <div id="headerLogoBox" onclick="openHeaderModal()" class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0" style="background-color: var(--color-point); color: #0f172a;" title="클릭하여 로고 및 헤더 제목 수정">
-                    <i class="ph-fill ph-check-square-offset text-2xl"></i>
-                </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h1 id="headerMainTitle" class="text-lg sm:text-xl font-bold tracking-tight">루틴 스튜디오</h1>
-                        <span id="headerBadgeText" class="text-xs px-2.5 py-0.5 rounded-full font-semibold badge-sub-accent">습관 & 목표 대시보드</span>
-                        <!-- Borderless & Boxless Settings Icon Button -->
-                        <button type="button" onclick="openHeaderModal()" class="header-settings-btn" title="헤더 제목 및 로고 아이콘 설정">
-                            <i class="ph-bold ph-gear-six text-lg"></i>
-                        </button>
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 lg:gap-3">
+            
+            <!-- Top Row on Mobile / Left Side on PC: Brand Title + Mobile Quick Add Button -->
+            <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div id="headerLogoBox" onclick="openHeaderModal()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0" style="background-color: var(--color-point); color: #0f172a;" title="클릭하여 로고 및 헤더 제목 수정">
+                        <i class="ph-fill ph-check-square-offset text-xl sm:text-2xl"></i>
                     </div>
-                    <p id="headerTodayText" class="text-xs theme-subtext truncate">오늘의 작은 실천이 연속 달성을 만듭니다</p>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h1 id="headerMainTitle" class="text-base sm:text-xl font-bold tracking-tight truncate">루틴 스튜디오</h1>
+                            <span id="headerBadgeText" class="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-semibold badge-sub-accent shrink-0">습관 & 목표 대시보드</span>
+                            <!-- Borderless & Boxless Settings Icon Button -->
+                            <button type="button" onclick="openHeaderModal()" class="header-settings-btn" title="헤더 제목 및 로고 아이콘 설정">
+                                <i class="ph-bold ph-gear-six text-base sm:text-lg"></i>
+                            </button>
+                        </div>
+                        <p id="headerTodayText" class="text-[11px] sm:text-xs theme-subtext truncate">오늘의 작은 실천이 연속 달성을 만듭니다</p>
+                    </div>
                 </div>
+
+                <!-- Mobile-Only Quick Add Habit CTA (Hidden on lg+) -->
+                <button onclick="openHabitModal()" class="lg:hidden btn-accent px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-sm shrink-0">
+                    <i class="ph-bold ph-plus-circle text-sm"></i>
+                    <span>새 습관</span>
+                </button>
             </div>
 
-            <!-- Theme Switcher & Customization Trigger -->
-            <div class="flex flex-wrap items-center gap-2">
+            <!-- Second Row on Mobile / Right Side on PC: Theme Switcher & Action Buttons -->
+            <div class="flex items-center justify-between lg:justify-end gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-0.5 lg:pb-0">
                 <!-- 4 Theme Quick Buttons -->
-                <div class="flex items-center p-1 rounded-xl border theme-border" style="background-color: var(--bg-main);">
-                    <button onclick="switchTheme('light')" id="themeBtn-light" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
-                        <i class="ph-fill ph-sun text-amber-500"></i> 라이트
+                <div class="flex items-center p-1 rounded-xl border theme-border shrink-0" style="background-color: var(--bg-main);">
+                    <button onclick="switchTheme('light')" id="themeBtn-light" class="theme-tab-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-fill ph-sun text-amber-500"></i> <span>라이트</span>
                     </button>
-                    <button onclick="switchTheme('dark')" id="themeBtn-dark" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
-                        <i class="ph-fill ph-moon-stars text-indigo-400"></i> 다크
+                    <button onclick="switchTheme('dark')" id="themeBtn-dark" class="theme-tab-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-fill ph-moon-stars text-indigo-400"></i> <span>다크</span>
                     </button>
-                    <button onclick="switchTheme('pastel')" id="themeBtn-pastel" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
-                        <i class="ph-fill ph-flower-lotus text-pink-400"></i> 파스텔
+                    <button onclick="switchTheme('pastel')" id="themeBtn-pastel" class="theme-tab-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-fill ph-flower-lotus text-pink-400"></i> <span>파스텔</span>
                     </button>
-                    <button onclick="switchTheme('retro')" id="themeBtn-retro" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
-                        <i class="ph-fill ph-cassette-tape text-orange-500"></i> 레트로
+                    <button onclick="switchTheme('retro')" id="themeBtn-retro" class="theme-tab-btn px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-fill ph-cassette-tape text-orange-500"></i> <span>레트로</span>
                     </button>
                 </div>
 
-                <!-- Theme Color Customizer Button -->
-                <button onclick="toggleThemePanel()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1.5 transition-all">
-                    <i class="ph-bold ph-palette text-base"></i>
-                    <span>테마 색상 설정</span>
-                </button>
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <!-- Theme Color Customizer Button -->
+                    <button onclick="toggleThemePanel()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-bold ph-palette text-sm sm:text-base"></i>
+                        <span class="hidden sm:inline">테마 색상 설정</span>
+                        <span class="sm:hidden">색상</span>
+                    </button>
 
-                <!-- Category Manager Button -->
-                <button onclick="openCategoryModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1.5 transition-all">
-                    <i class="ph-bold ph-tag text-base"></i>
-                    <span>카테고리 관리</span>
-                </button>
+                    <!-- Category Manager Button -->
+                    <button onclick="openCategoryModal()" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1 sm:gap-1.5 transition-all whitespace-nowrap">
+                        <i class="ph-bold ph-tag text-sm sm:text-base"></i>
+                        <span class="hidden sm:inline">카테고리 관리</span>
+                        <span class="sm:hidden">카테고리</span>
+                    </button>
 
-                <!-- Add New Habit Button -->
-                <button onclick="openHabitModal()" class="btn-accent px-4 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
-                    <i class="ph-bold ph-plus-circle text-base"></i>
-                    <span>새 습관 등록</span>
-                </button>
+                    <!-- Add New Habit Button (PC) -->
+                    <button onclick="openHabitModal()" class="hidden lg:flex btn-accent px-4 py-2 rounded-xl text-xs sm:text-sm items-center gap-1.5 shadow-sm whitespace-nowrap">
+                        <i class="ph-bold ph-plus-circle text-base"></i>
+                        <span>새 습관 등록</span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Collapsible Live Theme Color Customizer Panel -->
         <div id="themeCustomPanel" class="hidden border-t theme-border transition-all" style="background-color: var(--bg-box);">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--color-hover);"></span>
-                        <h3 class="text-sm font-bold">
+                        <h3 class="text-xs sm:text-sm font-bold">
                             <span id="customizingThemeTitle" class="underline decoration-2" style="text-decoration-color: var(--color-point);">라이트 모드</span> 실시간 색상 커스터마이징
                         </h3>
-                        <span class="text-xs theme-subtext">각 테마별로 커스텀 색상이 자동 저장됩니다</span>
+                        <span class="text-[11px] sm:text-xs theme-subtext">각 테마별로 커스텀 색상이 자동 저장됩니다</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="resetCurrentThemeColors()" class="px-3 py-1.5 rounded-lg text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
-                            <i class="ph-bold ph-arrow-counter-clockwise"></i> 현재 테마 기본값 복원
+                        <button onclick="resetCurrentThemeColors()" class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
+                            <i class="ph-bold ph-arrow-counter-clockwise"></i> 기본값 복원
                         </button>
                         <button onclick="toggleThemePanel()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
                             <i class="ph-bold ph-x text-sm"></i>
@@ -505,62 +549,62 @@
                 </div>
 
                 <!-- 6 Color Pickers Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
                     <!-- Background Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-bg" oninput="updateThemeColor('bg', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">배경색 (--bg-main)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">배경색</label>
                             <input type="text" id="hex-bg" maxlength="7" onchange="updateThemeColorFromHex('bg', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
                     </div>
 
                     <!-- Box Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-box" oninput="updateThemeColor('box', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">박스 색 (--bg-box)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">박스 색</label>
                             <input type="text" id="hex-box" maxlength="7" onchange="updateThemeColorFromHex('box', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
                     </div>
 
                     <!-- Accent Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-accent" oninput="updateThemeColor('accent', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">포인트색 (--color-point)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">포인트색</label>
                             <input type="text" id="hex-accent" maxlength="7" onchange="updateThemeColorFromHex('accent', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
                     </div>
 
                     <!-- Accent Hover Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-accentHover" oninput="updateThemeColor('accentHover', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">호버 색 (--color-hover)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">호버 색</label>
                             <input type="text" id="hex-accentHover" maxlength="7" onchange="updateThemeColorFromHex('accentHover', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
                     </div>
 
                     <!-- Sub Accent Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-subAccent" oninput="updateThemeColor('subAccent', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">작은 포인트 (--color-accent)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">작은 포인트</label>
                             <input type="text" id="hex-subAccent" maxlength="7" onchange="updateThemeColorFromHex('subAccent', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
                     </div>
 
                     <!-- Text Color -->
-                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                    <div class="p-2 sm:p-2.5 rounded-xl border theme-border flex items-center gap-2" style="background-color: var(--bg-main);">
                         <input type="color" id="picker-text" oninput="updateThemeColor('text', this.value)">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-[11px] font-semibold theme-subtext">글자색 (--text-color)</label>
+                            <label class="block text-[10px] sm:text-[11px] font-semibold theme-subtext truncate">글자색</label>
                             <input type="text" id="hex-text" maxlength="7" onchange="updateThemeColorFromHex('text', this.value)"
                                 class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
                         </div>
@@ -571,28 +615,28 @@
     </header>
 
     <!-- Main Dashboard Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 space-y-5">
+    <main class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 pt-3.5 sm:pt-5 space-y-3.5 sm:space-y-5">
 
-        <!-- 1. Top Summary Cards (Slim 3-Column Layout) -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <!-- 1. Top Summary Cards (Compact 3-Col on Mobile, Slim 3-Col on PC) -->
+        <section class="grid grid-cols-3 gap-2 sm:gap-3.5">
             <!-- Card 1: Today's Goal Progress -->
-            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
-                            <i class="ph-fill ph-target text-base" style="color: var(--color-hover);"></i>
+            <div class="theme-box rounded-2xl p-2.5 sm:px-4 sm:py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
+                            <i class="ph-fill ph-target text-xs sm:text-base" style="color: var(--color-hover);"></i>
                         </div>
-                        <div>
-                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">오늘의 목표 달성률</span>
-                            <div class="flex items-baseline gap-1.5 mt-0.5">
-                                <h2 id="statTodayPercent" class="text-xl sm:text-2xl font-extrabold leading-none">0%</h2>
-                                <span id="statTodayFraction" class="text-[11px] font-medium theme-subtext">(0/0 완료)</span>
+                        <div class="min-w-0">
+                            <span class="text-[10px] sm:text-[11px] font-semibold theme-subtext block leading-tight truncate">오늘 목표</span>
+                            <div class="flex items-baseline gap-1 mt-0.5 flex-wrap">
+                                <h2 id="statTodayPercent" class="text-base sm:text-2xl font-extrabold leading-none">0%</h2>
+                                <span id="statTodayFraction" class="text-[10px] sm:text-[11px] font-medium theme-subtext truncate">(0/0)</span>
                             </div>
                         </div>
                     </div>
-                    <span id="statTodayBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-lg badge-sub-accent">진행 중</span>
+                    <span id="statTodayBadge" class="hidden sm:inline-block text-[11px] font-bold px-2 py-0.5 rounded-lg badge-sub-accent shrink-0">진행 중</span>
                 </div>
-                <div class="mt-2.5">
+                <div class="mt-2 sm:mt-2.5">
                     <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
                         <div id="statTodayBar" class="progress-fill h-full rounded-full" style="width: 0%;"></div>
                     </div>
@@ -600,23 +644,23 @@
             </div>
 
             <!-- Card 2: Weekly Overall Achievement -->
-            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
-                            <i class="ph-fill ph-calendar-check text-base" style="color: var(--color-hover);"></i>
+            <div class="theme-box rounded-2xl p-2.5 sm:px-4 sm:py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
+                            <i class="ph-fill ph-calendar-check text-xs sm:text-base" style="color: var(--color-hover);"></i>
                         </div>
-                        <div>
-                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">선택 주간 달성률</span>
-                            <div class="flex items-baseline gap-1.5 mt-0.5">
-                                <h2 id="statWeekPercent" class="text-xl sm:text-2xl font-extrabold leading-none">0%</h2>
-                                <span id="statWeekFraction" class="text-[11px] font-medium theme-subtext">(0/0회)</span>
+                        <div class="min-w-0">
+                            <span class="text-[10px] sm:text-[11px] font-semibold theme-subtext block leading-tight truncate">주간 달성률</span>
+                            <div class="flex items-baseline gap-1 mt-0.5 flex-wrap">
+                                <h2 id="statWeekPercent" class="text-base sm:text-2xl font-extrabold leading-none">0%</h2>
+                                <span id="statWeekFraction" class="text-[10px] sm:text-[11px] font-medium theme-subtext truncate">(0/0회)</span>
                             </div>
                         </div>
                     </div>
-                    <span id="statWeekRangeMini" class="text-[11px] font-semibold theme-subtext">이번 주</span>
+                    <span id="statWeekRangeMini" class="hidden sm:inline-block text-[11px] font-semibold theme-subtext shrink-0">이번 주</span>
                 </div>
-                <div class="mt-2.5">
+                <div class="mt-2 sm:mt-2.5">
                     <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
                         <div id="statWeekBar" class="progress-fill h-full rounded-full" style="width: 0%;"></div>
                     </div>
@@ -624,43 +668,44 @@
             </div>
 
             <!-- Card 3: Best Streak Highlight ("7일") -->
-            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 badge-sub-accent">
-                            <i class="ph-fill ph-fire text-base text-orange-500"></i>
+            <div class="theme-box rounded-2xl p-2.5 sm:px-4 sm:py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 badge-sub-accent">
+                            <i class="ph-fill ph-fire text-xs sm:text-base text-orange-500"></i>
                         </div>
-                        <div>
-                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">현재 최고 연속 달성</span>
-                            <div class="flex items-baseline gap-1.5 mt-0.5">
-                                <h2 id="statBestStreak" class="text-xl sm:text-2xl font-extrabold leading-none">0일</h2>
+                        <div class="min-w-0">
+                            <span class="text-[10px] sm:text-[11px] font-semibold theme-subtext block leading-tight truncate">최고 연속</span>
+                            <div class="flex items-baseline gap-1 mt-0.5">
+                                <h2 id="statBestStreak" class="text-base sm:text-2xl font-extrabold leading-none">0일</h2>
                             </div>
                         </div>
                     </div>
-                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold badge-sub-accent flex items-center gap-1">
+                    <span class="hidden sm:inline-flex px-2 py-0.5 rounded-lg text-[11px] font-bold badge-sub-accent items-center gap-1 shrink-0">
                         <i class="ph-fill ph-trophy"></i> 최고 기록
                     </span>
                 </div>
-                <div class="mt-2.5 flex items-center justify-between text-[11px] pt-1.5 border-t theme-border">
-                    <span class="theme-subtext">최장 연속 습관</span>
-                    <span id="statBestStreakHabit" class="font-bold truncate max-w-[180px]">-</span>
+                <div class="mt-1.5 sm:mt-2.5 flex items-center justify-between text-[10px] sm:text-[11px] pt-1 sm:pt-1.5 border-t theme-border">
+                    <span class="theme-subtext hidden sm:inline">최장 연속 습관</span>
+                    <span id="statBestStreakHabit" class="font-bold truncate max-w-full sm:max-w-[180px]">-</span>
                 </div>
             </div>
         </section>
 
         <!-- 2. Main Interactive Workspace: Category Filters, Custom Sort Select & Weekly Habit Check Matrix -->
-        <section class="space-y-4">
+        <section class="space-y-3.5 sm:space-y-4">
 
             <!-- Filter & Week Navigation Bar -->
-            <div class="theme-box rounded-2xl p-4 shadow-xs space-y-3">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <!-- Category Filter Tabs -->
-                    <div class="flex items-center gap-1.5 flex-wrap" id="categoryFilterTabs">
+            <div class="theme-box rounded-2xl p-3 sm:p-4 shadow-xs space-y-2.5 sm:space-y-3">
+                <!-- Category Filter Tabs + Quick Actions -->
+                <div class="flex items-center justify-between gap-2">
+                    <!-- Category Filter Tabs (Scrollable horizontally on mobile, wraps on PC) -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap py-0.5 flex-1" id="categoryFilterTabs">
                         <!-- Populated by JS -->
                     </div>
 
-                    <!-- Quick Add Category & Habit Buttons -->
-                    <div class="flex items-center gap-2">
+                    <!-- Quick Add Category & Habit Buttons (PC/Tablet) -->
+                    <div class="hidden sm:flex items-center gap-2 shrink-0">
                         <button onclick="openCategoryModal()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-dashed theme-border theme-subtext hover:opacity-80 flex items-center gap-1">
                             <i class="ph-bold ph-palette"></i> 카테고리 편집
                         </button>
@@ -670,29 +715,29 @@
                     </div>
                 </div>
 
-                <!-- 1-Row Unified Bar: Week Navigation (Left) + Search & Custom Sort Select (Right) -->
-                <div class="pt-3 border-t theme-border flex items-center justify-between gap-3 flex-nowrap overflow-x-auto sm:overflow-visible">
+                <!-- Unified Bar: 2 Rows on Mobile, 1 Row on PC (No overflow clipping for dropdown!) -->
+                <div class="pt-2.5 sm:pt-3 border-t theme-border flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 lg:gap-3">
                     <!-- Left: Week Navigator -->
-                    <div class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-                        <button onclick="changeWeek(-1)" class="px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center gap-1 shrink-0" title="이전 주">
-                            <i class="ph-bold ph-caret-left"></i> <span>이전 주</span>
+                    <div class="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full lg:w-auto">
+                        <button onclick="changeWeek(-1)" class="px-2 sm:px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center justify-center gap-1 shrink-0" title="이전 주">
+                            <i class="ph-bold ph-caret-left"></i> <span class="hidden sm:inline">이전 주</span>
                         </button>
-                        <div class="px-3 py-1.5 rounded-xl border theme-border text-xs sm:text-sm font-bold inline-flex items-center gap-1.5 shrink-0" style="background-color: var(--bg-main);">
-                            <i class="ph-bold ph-calendar-blank" style="color: var(--color-hover);"></i>
-                            <span id="weekRangeLabel">2026년 10월 3주차 (10.12 ~ 10.18)</span>
+                        <div class="px-2.5 sm:px-3 py-1.5 rounded-xl border theme-border text-[11px] sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial min-w-0" style="background-color: var(--bg-main);">
+                            <i class="ph-bold ph-calendar-blank shrink-0" style="color: var(--color-hover);"></i>
+                            <span id="weekRangeLabel" class="truncate">2026년 10월 3주차 (10.12 ~ 10.18)</span>
                         </div>
-                        <button onclick="changeWeek(1)" class="px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center gap-1 shrink-0" title="다음 주">
-                            <span>다음 주</span> <i class="ph-bold ph-caret-right"></i>
+                        <button onclick="changeWeek(1)" class="px-2 sm:px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center justify-center gap-1 shrink-0" title="다음 주">
+                            <span class="hidden sm:inline">다음 주</span> <i class="ph-bold ph-caret-right"></i>
                         </button>
-                        <button onclick="resetToCurrentWeek()" id="btnThisWeek" class="px-2.5 py-1.5 rounded-xl text-xs font-bold badge-sub-accent hover:opacity-90 transition shrink-0">
+                        <button onclick="resetToCurrentWeek()" id="btnThisWeek" class="px-2 sm:px-2.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold badge-sub-accent hover:opacity-90 transition shrink-0">
                             이번 주
                         </button>
                     </div>
 
-                    <!-- Right: Search Input & Custom Sort Dropdown on the Exact Same Line -->
-                    <div class="flex items-center gap-2 flex-1 justify-end min-w-0 shrink-0 sm:shrink">
+                    <!-- Right: Search Input & Custom Sort Dropdown -->
+                    <div class="flex items-center gap-2 w-full lg:w-auto lg:flex-1 lg:justify-end">
                         <!-- Search Input -->
-                        <div class="relative w-36 sm:w-48 md:w-56 min-w-[120px]">
+                        <div class="relative flex-1 lg:flex-initial lg:w-56 min-w-0">
                             <i class="ph ph-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 theme-subtext text-sm"></i>
                             <input type="text" id="habitSearchInput" oninput="renderDashboard()" placeholder="습관 또는 목표 검색..."
                                 class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border theme-border bg-transparent accent-ring">
@@ -715,8 +760,8 @@
                 </div>
             </div>
 
-            <!-- Weekly Habit Matrix Table Card -->
-            <div class="theme-box rounded-2xl shadow-xs overflow-hidden">
+            <!-- PC / Tablet Weekly Habit Matrix Table Card (Visible on md and up) -->
+            <div id="desktopMatrixWrapper" class="hidden md:block theme-box rounded-2xl shadow-xs overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse min-w-[780px]">
                         <thead>
@@ -729,18 +774,23 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                <!-- Empty State -->
-                <div id="emptyHabitState" class="hidden p-12 text-center space-y-3">
-                    <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center badge-sub-accent">
-                        <i class="ph-fill ph-sparkle text-2xl"></i>
-                    </div>
-                    <h3 class="text-base font-bold">표시할 습관이 없습니다</h3>
-                    <p class="text-xs theme-subtext">새 습관을 등록하거나 다른 카테고리 필터를 선택해 보세요.</p>
-                    <button onclick="openHabitModal()" class="btn-accent px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5">
-                        <i class="ph-bold ph-plus"></i> 첫 습관 만들기
-                    </button>
+            <!-- Mobile Weekly Habit Card List (Visible below md: Zero horizontal scrolling!) -->
+            <div id="mobileMatrixList" class="md:hidden space-y-2.5">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Empty State (Shared for both PC and Mobile) -->
+            <div id="emptyHabitState" class="hidden theme-box rounded-2xl p-10 sm:p-12 text-center space-y-3 shadow-xs">
+                <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center badge-sub-accent">
+                    <i class="ph-fill ph-sparkle text-2xl"></i>
                 </div>
+                <h3 class="text-base font-bold">표시할 습관이 없습니다</h3>
+                <p class="text-xs theme-subtext">새 습관을 등록하거나 다른 카테고리 필터를 선택해 보세요.</p>
+                <button onclick="openHabitModal()" class="btn-accent px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5">
+                    <i class="ph-bold ph-plus"></i> 첫 습관 만들기
+                </button>
             </div>
         </section>
     </main>
@@ -749,14 +799,14 @@
          MODAL 1: Habit Add / Edit Modal
          (Rich 60+ Icon Picker + Custom Icon Registration + Custom Dropdowns)
          ========================================== -->
-    <div id="habitModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
-        <div class="theme-box rounded-2xl max-w-xl w-full p-6 shadow-xl space-y-4 animate-pop my-8">
+    <div id="habitModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+        <div class="theme-box rounded-2xl max-w-xl w-full p-4 sm:p-6 shadow-xl space-y-4 animate-pop my-auto max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b theme-border pb-3">
                 <div>
-                    <h3 id="habitModalTitle" class="text-lg font-bold">새 습관 등록</h3>
+                    <h3 id="habitModalTitle" class="text-base sm:text-lg font-bold">새 습관 등록</h3>
                     <p class="text-xs theme-subtext mt-0.5">아이콘과 일일 목표, 나에게 맞는 실천 주기를 설정하세요</p>
                 </div>
-                <button type="button" onclick="closeHabitModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                <button type="button" onclick="closeHabitModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75 shrink-0">
                     <i class="ph-bold ph-x"></i>
                 </button>
             </div>
@@ -767,7 +817,7 @@
                 <input type="hidden" id="habitCategoryInput" value="">
 
                 <!-- Icon Trigger & Habit Name -->
-                <div class="flex items-start gap-3">
+                <div class="flex items-start gap-2.5 sm:gap-3">
                     <!-- Selected Icon Trigger Button -->
                     <div class="shrink-0">
                         <label class="block text-xs font-bold mb-1.5">아이콘</label>
@@ -780,7 +830,7 @@
                     </div>
 
                     <!-- Habit Name Input -->
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <label class="block text-xs font-bold mb-1.5">습관 이름 *</label>
                         <input type="text" id="habitNameInput" required maxlength="40" placeholder="예: 아침 스트레칭 15분"
                             class="w-full h-[42px] px-3.5 rounded-xl border theme-border bg-transparent text-sm accent-ring">
@@ -788,7 +838,7 @@
                 </div>
 
                 <!-- Expandable Rich Icon Library + Custom Icon Creator Panel -->
-                <div id="iconPickerPanel" class="hidden p-3.5 rounded-2xl border theme-border space-y-3 animate-pop" style="background-color: var(--bg-main);">
+                <div id="iconPickerPanel" class="hidden p-3 sm:p-3.5 rounded-2xl border theme-border space-y-3 animate-pop" style="background-color: var(--bg-main);">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div class="flex items-center gap-1.5">
                             <i class="ph-fill ph-sparkle" style="color: var(--color-hover);"></i>
@@ -802,11 +852,11 @@
                     <!-- Custom Icon Input Row -->
                     <div class="flex items-center gap-2 p-2 rounded-xl border theme-border" style="background-color: var(--bg-box);">
                         <input type="text" id="customIconTextInput" maxlength="4"
-                            placeholder="원하는 이모지나 짧은 글자 입력 (예: 🧘‍♀️, 🎸, 영단, 비타민)"
+                            placeholder="이모지나 짧은 글자 (예: 🧘‍♀️, 영단)"
                             onkeydown="if(event.key==='Enter'){event.preventDefault(); registerCustomIcon();}"
-                            class="flex-1 px-2.5 py-1.5 text-xs bg-transparent focus:outline-none">
-                        <button type="button" onclick="registerCustomIcon()" class="btn-accent px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
-                            <i class="ph-bold ph-plus"></i> 아이콘 등록
+                            class="flex-1 min-w-0 px-2 py-1.5 text-xs bg-transparent focus:outline-none">
+                        <button type="button" onclick="registerCustomIcon()" class="btn-accent px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1 shrink-0">
+                            <i class="ph-bold ph-plus"></i> 등록
                         </button>
                     </div>
 
@@ -816,7 +866,7 @@
                     </div>
 
                     <!-- 60+ Icons Grid -->
-                    <div id="iconLibraryGrid" class="grid grid-cols-7 sm:grid-cols-9 gap-1.5 max-h-44 overflow-y-auto p-1">
+                    <div id="iconLibraryGrid" class="grid grid-cols-6 sm:grid-cols-9 gap-1.5 max-h-44 overflow-y-auto p-1">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -858,12 +908,12 @@
                             <span class="text-[11px] theme-subtext">색상과 이름을 지정하세요</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <input type="color" id="inlineCatColorInput" value="#a0d6ff">
+                            <input type="color" id="inlineCatColorInput" value="#a0d6ff" class="shrink-0">
                             <input type="text" id="inlineCatNameInput" maxlength="20" placeholder="카테고리 이름 (예: 외국어)"
                                 onkeydown="if(event.key==='Enter'){event.preventDefault(); createInlineCategory();}"
-                                class="flex-1 p-2 rounded-lg border theme-border bg-transparent text-xs accent-ring">
-                            <button type="button" onclick="createInlineCategory()" class="btn-accent px-3 py-2 rounded-lg text-xs whitespace-nowrap">
-                                추가 후 선택
+                                class="flex-1 min-w-0 p-2 rounded-lg border theme-border bg-transparent text-xs accent-ring">
+                            <button type="button" onclick="createInlineCategory()" class="btn-accent px-3 py-2 rounded-lg text-xs whitespace-nowrap shrink-0">
+                                추가
                             </button>
                         </div>
                     </div>
@@ -897,11 +947,11 @@
                     </div>
 
                     <!-- Option 2: Every N Days (Custom Dropdown 3) -->
-                    <div id="freqConfig-interval" class="hidden p-3.5 rounded-xl border theme-border space-y-3" style="background-color: var(--bg-main);">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div id="freqConfig-interval" class="hidden p-3 sm:p-3.5 rounded-xl border theme-border space-y-3" style="background-color: var(--bg-main);">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <label class="text-xs font-bold">반복 간격 선택</label>
                             <!-- Custom Dropdown for N-Day Interval -->
-                            <div class="custom-select-container w-56" id="dropdown-freqInterval">
+                            <div class="custom-select-container w-full sm:w-56" id="dropdown-freqInterval">
                                 <button type="button" onclick="toggleCustomDropdown('freqInterval', event)" id="trigger-freqInterval" class="custom-select-trigger !py-2">
                                     <span id="label-freqInterval" class="truncate">2일마다 (이틀에 한 번)</span>
                                     <i class="ph-bold ph-caret-down custom-select-caret text-xs"></i>
@@ -919,7 +969,7 @@
                     </div>
 
                     <!-- Option 3: Specific Days of Week (Mon=1 ... Sun=0) -->
-                    <div id="freqConfig-days" class="hidden p-3.5 rounded-xl border theme-border space-y-2" style="background-color: var(--bg-main);">
+                    <div id="freqConfig-days" class="hidden p-3 sm:p-3.5 rounded-xl border theme-border space-y-2" style="background-color: var(--bg-main);">
                         <span class="text-xs font-bold block">실천할 요일 선택 (복수 선택 가능)</span>
                         <div class="flex items-center justify-between gap-1 pt-1">
                             <button type="button" onclick="toggleSpecificDay(1)" id="dayBtn-1" class="day-Select-btn">월</button>
@@ -933,11 +983,11 @@
                     </div>
 
                     <!-- Option 4: Weekly N times (Custom Dropdown 4) -->
-                    <div id="freqConfig-weekly_count" class="hidden p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div id="freqConfig-weekly_count" class="hidden p-3 sm:p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <label class="text-xs font-bold">주간 목표 횟수</label>
                             <!-- Custom Dropdown for Weekly Count -->
-                            <div class="custom-select-container w-48" id="dropdown-freqWeekly">
+                            <div class="custom-select-container w-full sm:w-48" id="dropdown-freqWeekly">
                                 <button type="button" onclick="toggleCustomDropdown('freqWeekly', event)" id="trigger-freqWeekly" class="custom-select-trigger !py-2">
                                     <span id="label-freqWeekly" class="truncate">주 3회 달성</span>
                                     <i class="ph-bold ph-caret-down custom-select-caret text-xs"></i>
@@ -966,32 +1016,32 @@
     <!-- ==========================================
          MODAL 2: No-Code Category Manager Modal (Edit Name, Color, Add, Delete)
          ========================================== -->
-    <div id="categoryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-        <div class="theme-box rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-5 animate-pop">
+    <div id="categoryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+        <div class="theme-box rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-5 animate-pop my-auto max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b theme-border pb-3">
                 <div>
-                    <h3 class="text-lg font-bold">카테고리 관리 (이름 · 색상 실시간 수정)</h3>
+                    <h3 class="text-base sm:text-lg font-bold">카테고리 관리 (이름 · 색상 실시간 수정)</h3>
                     <p class="text-xs theme-subtext mt-0.5">카테고리 이름이나 색상을 바꾸면 모든 습관 배지에 즉시 반영됩니다.</p>
                 </div>
-                <button onclick="closeCategoryModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                <button onclick="closeCategoryModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75 shrink-0">
                     <i class="ph-bold ph-x"></i>
                 </button>
             </div>
 
             <!-- Add New Category Bar -->
-            <div class="p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
+            <div class="p-3 sm:p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
                 <label class="block text-xs font-bold">새 카테고리 추가</label>
                 <div class="flex items-center gap-2">
-                    <input type="color" id="newCategoryColor" value="#7dd3fc">
-                    <input type="text" id="newCategoryName" maxlength="20" placeholder="새 카테고리 이름 입력 (예: 외국어, 재테크)"
+                    <input type="color" id="newCategoryColor" value="#7dd3fc" class="shrink-0">
+                    <input type="text" id="newCategoryName" maxlength="20" placeholder="새 카테고리 이름 (예: 외국어, 재테크)"
                         onkeydown="if(event.key==='Enter'){event.preventDefault(); addNewCategoryFromManager();}"
-                        class="flex-1 p-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm accent-ring">
-                    <button onclick="addNewCategoryFromManager()" class="btn-accent px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+                        class="flex-1 min-w-0 p-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm accent-ring">
+                    <button onclick="addNewCategoryFromManager()" class="btn-accent px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap shrink-0">
                         <i class="ph-bold ph-plus"></i> 추가
                     </button>
                 </div>
                 <!-- Quick Preset Swatches -->
-                <div class="flex items-center gap-1.5 pt-1">
+                <div class="flex items-center gap-1.5 pt-1 flex-wrap">
                     <span class="text-[11px] theme-subtext mr-1">추천 팔레트:</span>
                     <button type="button" onclick="document.getElementById('newCategoryColor').value='#a0d6ff'" class="w-5 h-5 rounded-full border border-black/10" style="background:#a0d6ff"></button>
                     <button type="button" onclick="document.getElementById('newCategoryColor').value='#ffe8a0'" class="w-5 h-5 rounded-full border border-black/10" style="background:#ffe8a0"></button>
@@ -1018,21 +1068,21 @@
     <!-- ==========================================
          MODAL 3: Header & Logo Customization Modal
          ========================================== -->
-    <div id="headerModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
-        <div class="theme-box rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-5 animate-pop my-8">
+    <div id="headerModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+        <div class="theme-box rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-xl space-y-4 sm:space-y-5 animate-pop my-auto max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b theme-border pb-3">
                 <div>
-                    <h3 class="text-lg font-bold">헤더 & 로고 설정</h3>
+                    <h3 class="text-base sm:text-lg font-bold">헤더 & 로고 설정</h3>
                     <p class="text-xs theme-subtext mt-0.5">대시보드 상단의 로고 아이콘과 제목·배지·슬로건 문구를 자유롭게 변경하세요</p>
                 </div>
-                <button type="button" onclick="closeHeaderModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                <button type="button" onclick="closeHeaderModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75 shrink-0">
                     <i class="ph-bold ph-x"></i>
                 </button>
             </div>
 
             <form id="headerConfigForm" onsubmit="saveHeaderConfig(event)" class="space-y-4">
                 <!-- Live Preview Card -->
-                <div class="p-3.5 rounded-2xl border theme-border space-y-1.5" style="background-color: var(--bg-main);">
+                <div class="p-3 sm:p-3.5 rounded-2xl border theme-border space-y-1.5" style="background-color: var(--bg-main);">
                     <div class="flex items-center justify-between">
                         <span class="text-[11px] font-bold theme-subtext">실시간 미리보기</span>
                         <span class="text-[11px] theme-subtext">현재 테마 색상 연동</span>
@@ -1058,7 +1108,7 @@
                     <!-- Preset SVG Vector Icons -->
                     <div>
                         <span class="text-[11px] theme-subtext block mb-1.5">기본 심볼 아이콘</span>
-                        <div id="headerSvgLogoGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-1.5">
+                        <div id="headerSvgLogoGrid" class="grid grid-cols-6 gap-1.5">
                             <!-- Populated by JS -->
                         </div>
                     </div>
@@ -1066,7 +1116,7 @@
                     <!-- Preset Emoji / Text Icons -->
                     <div>
                         <span class="text-[11px] theme-subtext block mb-1.5">추천 이모지 & 직접 입력</span>
-                        <div id="headerEmojiLogoGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-1.5 mb-2">
+                        <div id="headerEmojiLogoGrid" class="grid grid-cols-6 gap-1.5 mb-2">
                             <!-- Populated by JS -->
                         </div>
                         <div class="flex items-center gap-2">
@@ -1114,7 +1164,7 @@
 
                 <!-- Footer Actions -->
                 <div class="flex items-center justify-between gap-2 pt-3 border-t theme-border">
-                    <button type="button" onclick="resetHeaderConfigToDefault()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
+                    <button type="button" onclick="resetHeaderConfigToDefault()" class="px-3 sm:px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i> 기본값 복원
                     </button>
                     <div class="flex items-center gap-2">
@@ -1131,7 +1181,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto sm:bottom-5 sm:right-5 z-50 space-y-2 pointer-events-none flex flex-col items-center sm:items-end"></div>
 
     <script>
         /* =========================================================================
@@ -1235,7 +1285,7 @@
         ];
 
         const DEFAULT_HEADER_CONFIG = {
-            logoType: 'ph', // 'ph' (Phosphor icon class) or 'text' (Emoji / short string)
+            logoType: 'ph',
             logoValue: 'ph-check-square-offset',
             title: '루틴 스튜디오',
             badge: '습관 & 목표 대시보드',
@@ -1556,7 +1606,6 @@
             ['sortFilter', 'habitCategory', 'freqInterval', 'freqWeekly'].forEach(id => closeCustomDropdown(id));
         }
 
-        // Global outside-click listener for custom dropdowns
         document.addEventListener('click', (e) => {
             if (!activeOpenDropdownId) return;
             const container = document.getElementById(`dropdown-${activeOpenDropdownId}`);
@@ -1691,7 +1740,6 @@
            ========================================================================= */
         function formatIconDisplayHTML(iconStr, sizeClass = 'text-xl') {
             const val = (iconStr || '⭐').trim();
-            // Check if short Korean/alphanumeric text (non-emoji text badge)
             const charLen = Array.from(val).length;
             const isTextLabel = /^[가-힣a-zA-Z0-9]+$/.test(val) && charLen >= 2;
             if (isTextLabel) {
@@ -1745,7 +1793,6 @@
 
             let iconsToDisplay = [];
             if (activeIconTab === 'all') {
-                // Show custom icons first, then all preset categories
                 appState.customIcons.forEach(ic => iconsToDisplay.push({ icon: ic, isCustom: true }));
                 Object.values(ICON_LIBRARY).forEach(group => {
                     group.icons.forEach(ic => {
@@ -1954,7 +2001,7 @@
         }
 
         /* =========================================================================
-           7. RENDER DASHBOARD
+           7. RENDER DASHBOARD (PC MATRIX + MOBILE NATIVE CARDS)
            ========================================================================= */
         function getFormattedTodayKoreanString() {
             const korDays = ['일', '월', '화', '수', '목', '금', '토'];
@@ -1963,7 +2010,7 @@
 
         function renderLogoInnerHTML(logoType, logoValue) {
             if (logoType === 'ph') {
-                return `<i class="ph-fill ${escapeHtml(logoValue)} text-2xl"></i>`;
+                return `<i class="ph-fill ${escapeHtml(logoValue)} text-xl sm:text-2xl"></i>`;
             }
             const val = (logoValue || '✨').trim();
             const charLen = Array.from(val).length;
@@ -1971,7 +2018,7 @@
             if (isTextLabel) {
                 return `<span class="text-xs font-extrabold tracking-tight px-1">${escapeHtml(val)}</span>`;
             }
-            return `<span class="text-xl leading-none">${escapeHtml(val)}</span>`;
+            return `<span class="text-lg sm:text-xl leading-none">${escapeHtml(val)}</span>`;
         }
 
         function renderHeaderBranding() {
@@ -2074,7 +2121,7 @@
 
             let html = `
                 <button onclick="setCategoryFilter('ALL')"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${selectedCategoryFilter === 'ALL' ? 'shadow-2xs' : 'theme-border opacity-75 hover:opacity-100'}"
+                    class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 whitespace-nowrap ${selectedCategoryFilter === 'ALL' ? 'shadow-2xs' : 'theme-border opacity-75 hover:opacity-100'}"
                     style="${selectedCategoryFilter === 'ALL' ? 'background-color: var(--color-point); color: #0f172a; border-color: var(--color-hover);' : 'background-color: transparent;'}">
                     <span>전체</span>
                     <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-black/10">${totalCount}</span>
@@ -2087,9 +2134,9 @@
 
                 html += `
                     <button onclick="setCategoryFilter('${cat.id}')"
-                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isActive ? 'shadow-2xs scale-[1.02]' : 'theme-border opacity-85 hover:opacity-100'}"
+                        class="px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 whitespace-nowrap ${isActive ? 'shadow-2xs scale-[1.02]' : 'theme-border opacity-85 hover:opacity-100'}"
                         style="${isActive ? `background-color: ${cat.color}; color: #0f172a; border-color: #0f172a20;` : 'background-color: transparent;'}">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${cat.color};"></span>
+                        <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${cat.color};"></span>
                         <span>${escapeHtml(cat.name)}</span>
                         <span class="text-[11px] opacity-75">${count}</span>
                     </button>
@@ -2107,8 +2154,11 @@
         function renderWeeklyMatrix(weekDays, habits) {
             const headerRow = document.getElementById('matrixHeaderRow');
             const tbody = document.getElementById('matrixBody');
+            const desktopWrapper = document.getElementById('desktopMatrixWrapper');
+            const mobileList = document.getElementById('mobileMatrixList');
             const emptyState = document.getElementById('emptyHabitState');
 
+            // 1. PC Table Header
             let headerHtml = `<th class="py-3 px-5 font-bold w-80">습관 및 일일 목표</th>`;
             weekDays.forEach(d => {
                 headerHtml += `
@@ -2127,21 +2177,34 @@
             `;
             headerRow.innerHTML = headerHtml;
 
+            // Empty State Check
             if (habits.length === 0) {
                 tbody.innerHTML = '';
+                mobileList.innerHTML = '';
+                desktopWrapper.classList.add('!hidden');
+                mobileList.classList.add('hidden');
                 emptyState.classList.remove('hidden');
                 return;
             }
+
             emptyState.classList.add('hidden');
+            desktopWrapper.classList.remove('!hidden');
+            mobileList.classList.remove('hidden');
 
             let rowsHtml = '';
+            let mobileCardsHtml = '';
+
             habits.forEach(habit => {
                 const cat = getCategoryById(habit.categoryId);
                 const streak = calculateStreak(habit);
                 const freqLabel = getFrequencyBadgeLabel(habit);
                 const progress = getWeeklyHabitProgress(habit, weekDays);
 
+                // PC Table Day Cells
                 let dayCellsHtml = '';
+                // Mobile Card 7-Day Grid Cells
+                let mobileDaysGridHtml = '';
+
                 weekDays.forEach(d => {
                     const isChecked = !!(habit.checks && habit.checks[d.key]);
                     const isScheduled = isHabitScheduledOnDate(habit, d.dateObj);
@@ -2159,8 +2222,23 @@
                             </button>
                         </td>
                     `;
+
+                    mobileDaysGridHtml += `
+                        <div class="mobile-day-box ${d.isToday ? 'is-today' : ''}">
+                            <div class="flex flex-col items-center leading-none">
+                                <span class="text-[10px] font-semibold ${d.isToday ? 'font-extrabold' : 'theme-subtext'}">${d.dayName}</span>
+                                <span class="text-[11px] font-bold mt-0.5">${d.date}</span>
+                            </div>
+                            <button onclick="toggleHabitCheck('${habit.id}', '${d.key}')"
+                                class="check-cell mobile-check-cell ${restClass} ${isChecked ? 'checked' : ''}"
+                                title="${tooltip}">
+                                ${isChecked ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                            </button>
+                        </div>
+                    `;
                 });
 
+                // PC Table Row
                 rowsHtml += `
                     <tr class="hover:bg-black/[0.015] transition">
                         <!-- Habit Title, Category Badge, Frequency Badge & Goal -->
@@ -2217,9 +2295,66 @@
                         </td>
                     </tr>
                 `;
+
+                // Mobile Card Item
+                mobileCardsHtml += `
+                    <div class="theme-box rounded-2xl p-3.5 shadow-xs space-y-3">
+                        <!-- Card Top: Icon, Badges, Title, Streak & Edit/Delete -->
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                                <div class="habit-avatar-box mt-0.5">
+                                    ${formatIconDisplayHTML(habit.icon || '⭐', 'text-xl')}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1 flex-wrap mb-1">
+                                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold inline-flex items-center"
+                                            style="background-color: ${cat.color}; color: #0f172a;">
+                                            ${escapeHtml(cat.name)}
+                                        </span>
+                                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-semibold border theme-border theme-subtext"
+                                            style="background-color: var(--bg-main);">
+                                            ${escapeHtml(freqLabel)}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold inline-flex items-center gap-0.5 ${streak > 0 ? 'badge-sub-accent' : 'theme-subtext border theme-border'}">
+                                            ${streak > 0 ? `🔥 ${streak}일` : '0일'}
+                                        </span>
+                                    </div>
+                                    <h4 class="font-bold text-sm leading-snug break-words">${escapeHtml(habit.name)}</h4>
+                                    ${habit.goal ? `<p class="text-xs theme-subtext mt-0.5 break-words">${escapeHtml(habit.goal)}</p>` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Edit / Delete Buttons -->
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="openHabitModal('${habit.id}')" class="p-1.5 rounded-lg border theme-border hover:opacity-80" title="습관 수정">
+                                    <i class="ph-bold ph-pencil-simple text-xs"></i>
+                                </button>
+                                <button onclick="deleteHabit('${habit.id}')" class="p-1.5 rounded-lg border theme-border text-rose-500 hover:bg-rose-500/10" title="습관 삭제">
+                                    <i class="ph-bold ph-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card Middle: 7-Column Mon~Sun Touch Check Grid -->
+                        <div class="grid grid-cols-7 gap-1 pt-2 border-t theme-border">
+                            ${mobileDaysGridHtml}
+                        </div>
+
+                        <!-- Card Bottom: Weekly Progress Bar -->
+                        <div class="flex items-center gap-2.5 pt-1">
+                            <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
+                                <div class="progress-fill h-full rounded-full" style="width: ${progress.rate}%;"></div>
+                            </div>
+                            <span class="text-[11px] font-bold shrink-0">
+                                ${progress.achieved}/${progress.target}회 <span class="theme-subtext font-normal">(${progress.rate}%)</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
             });
 
             tbody.innerHTML = rowsHtml;
+            mobileList.innerHTML = mobileCardsHtml;
         }
 
         function updateSummaryCards(weekDays) {
@@ -2531,17 +2666,18 @@
             list.innerHTML = appState.categories.map(cat => {
                 const count = appState.habits.filter(h => h.categoryId === cat.id).length;
                 return `
-                    <div class="p-3 rounded-xl border theme-border flex items-center justify-between gap-3" style="background-color: var(--bg-main);">
-                        <div class="flex items-center gap-2.5 flex-1">
+                    <div class="p-2.5 sm:p-3 rounded-xl border theme-border flex items-center justify-between gap-2 sm:gap-3" style="background-color: var(--bg-main);">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
                             <input type="color" value="${normalizeHex(cat.color)}"
                                 oninput="updateCategoryLive('${cat.id}', 'color', this.value)"
+                                class="shrink-0"
                                 title="카테고리 색상 변경">
                             <input type="text" value="${escapeHtml(cat.name)}" maxlength="20"
                                 oninput="updateCategoryLive('${cat.id}', 'name', this.value)"
-                                class="flex-1 px-2.5 py-1.5 rounded-lg border theme-border bg-transparent text-xs sm:text-sm font-bold accent-ring">
+                                class="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border theme-border bg-transparent text-xs sm:text-sm font-bold accent-ring">
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold" style="background-color: ${cat.color}; color: #0f172a;">
+                        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                            <span class="px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold whitespace-nowrap" style="background-color: ${cat.color}; color: #0f172a;">
                                 습관 ${count}개
                             </span>
                             <button onclick="deleteCategory('${cat.id}')"
@@ -2775,7 +2911,7 @@
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'theme-box px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 border theme-border animate-pop';
-            toast.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: var(--color-hover);"></span><span>${escapeHtml(message)}</span>`;
+            toast.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: var(--color-hover);"></span><span>${escapeHtml(message)}</span>`;
             container.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
