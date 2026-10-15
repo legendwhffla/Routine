@@ -1,0 +1,2803 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조작형 습관 및 일일 목표 관리 대시보드</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard Font & Phosphor Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-main: #fcfcfc;
+            --bg-box: #ffffff;
+            --color-point: #a0d6ff;
+            --color-hover: #54abee;
+            --color-accent: #ffe8a0;
+            --text-color: #1e293b;
+            --subtext-color: #64748b;
+            --border-color: #e5e7eb;
+
+            /* Legacy aliases for seamless compatibility */
+            --bg-color: var(--bg-main);
+            --box-color: var(--bg-box);
+            --point-color: var(--color-point);
+            --hover-color: var(--color-hover);
+            --sub-point-color: var(--color-accent);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-color);
+            transition: background-color 0.25s ease, color 0.25s ease;
+            min-height: 100vh;
+        }
+
+        /* Theme Surface & Typography Utilities */
+        .theme-box {
+            background-color: var(--bg-box);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        }
+
+        .theme-subtext {
+            color: var(--subtext-color);
+        }
+
+        .theme-border {
+            border-color: var(--border-color);
+        }
+
+        .btn-accent {
+            background-color: var(--color-point);
+            color: #0f172a;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-accent:hover {
+            background-color: var(--color-hover);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .badge-sub-accent {
+            background-color: var(--color-accent);
+            color: #1e293b;
+        }
+
+        .accent-ring:focus {
+            outline: none;
+            border-color: var(--color-hover);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-point) 45%, transparent);
+        }
+
+        /* =========================================================
+           Custom Dropdown Component (Replaces all native <select>)
+           ========================================================= */
+        .custom-select-container {
+            position: relative;
+            user-select: none;
+        }
+
+        .custom-select-trigger {
+            width: 100%;
+            background-color: var(--bg-box);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.55rem 0.85rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .custom-select-trigger:hover {
+            border-color: var(--color-hover);
+            background-color: color-mix(in srgb, var(--color-point) 10%, var(--bg-box));
+        }
+
+        .custom-select-trigger.open {
+            border-color: var(--color-hover);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-point) 40%, transparent);
+        }
+
+        .custom-select-caret {
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: var(--subtext-color);
+        }
+
+        .custom-select-trigger.open .custom-select-caret {
+            transform: rotate(180deg);
+            color: var(--color-hover);
+        }
+
+        .custom-select-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 100%;
+            background-color: var(--bg-box);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 0.35rem;
+            box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.16), 0 4px 10px -3px rgba(15, 23, 42, 0.08);
+            z-index: 70;
+            max-height: 250px;
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateY(-6px) scale(0.98);
+            pointer-events: none;
+            transition: opacity 0.16s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .custom-select-menu.open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .custom-select-option {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 0.7rem;
+            border-radius: 9px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.14s ease;
+        }
+
+        .custom-select-option:hover {
+            background-color: color-mix(in srgb, var(--color-point) 35%, var(--bg-box));
+            color: var(--text-color);
+        }
+
+        .custom-select-option.selected {
+            background-color: var(--color-point);
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .custom-select-option.selected:hover {
+            background-color: var(--color-hover);
+            color: #ffffff;
+        }
+
+        .custom-select-action {
+            width: 100%;
+            text-align: left;
+            padding: 0.55rem 0.7rem;
+            margin-top: 0.25rem;
+            border-top: 1px dashed var(--border-color);
+            border-radius: 0 0 9px 9px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--color-hover);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            transition: all 0.14s ease;
+        }
+
+        .custom-select-action:hover {
+            background-color: color-mix(in srgb, var(--color-accent) 45%, var(--bg-box));
+            color: #0f172a;
+        }
+
+        /* =========================================================
+           Icon Picker Grid & Custom Badge Styles
+           ========================================================= */
+        .icon-grid-btn {
+            height: 40px;
+            border-radius: 11px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-box);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease;
+        }
+
+        .icon-grid-btn:hover {
+            border-color: var(--color-hover);
+            background-color: color-mix(in srgb, var(--color-point) 22%, var(--bg-box));
+            transform: translateY(-1px) scale(1.04);
+        }
+
+        .icon-grid-btn.active {
+            background-color: var(--color-point);
+            border-color: var(--color-hover);
+            color: #0f172a;
+            box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05);
+        }
+
+        .icon-text-badge {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            padding: 0 3px;
+            word-break: keep-all;
+        }
+
+        .habit-avatar-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            background-color: color-mix(in srgb, var(--color-point) 20%, var(--bg-main));
+            border: 1px solid color-mix(in srgb, var(--color-point) 45%, var(--border-color));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            user-select: none;
+        }
+
+        /* Habit Check Button Animation */
+        .check-cell {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            border: 2px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background-color: transparent;
+            position: relative;
+        }
+
+        .check-cell:hover {
+            border-color: var(--color-hover);
+            transform: scale(1.07);
+        }
+
+        .check-cell.rest-day {
+            border-style: dashed;
+            opacity: 0.45;
+        }
+
+        .check-cell.rest-day:hover {
+            opacity: 0.85;
+            border-color: var(--color-hover);
+        }
+
+        .check-cell.checked {
+            background-color: var(--color-point);
+            border-color: var(--color-hover);
+            border-style: solid;
+            opacity: 1;
+            color: #0f172a;
+            transform: scale(1.03);
+            box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.12);
+        }
+
+        .check-cell.checked:hover {
+            background-color: var(--color-hover);
+            color: #ffffff;
+        }
+
+        .today-column-header {
+            background-color: var(--color-accent);
+            color: #1e293b;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .progress-fill {
+            background-color: var(--color-point);
+            transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s ease;
+        }
+
+        /* Day selector button in Habit Modal */
+        .day-Select-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            transition: all 0.15s ease;
+        }
+
+        .day-Select-btn.active {
+            background-color: var(--color-point);
+            border-color: var(--color-hover);
+            color: #0f172a;
+        }
+
+        /* Color Picker Styling */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* Header Borderless Settings Icon Button & Logo Preset Buttons */
+        .header-settings-btn {
+            background: transparent;
+            border: none;
+            color: var(--subtext-color);
+            padding: 0.35rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .header-settings-btn:hover {
+            color: var(--color-hover);
+            transform: rotate(45deg) scale(1.12);
+        }
+
+        .logo-preset-btn {
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-box);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+
+        .logo-preset-btn:hover {
+            border-color: var(--color-hover);
+            background-color: color-mix(in srgb, var(--color-point) 22%, var(--bg-box));
+            transform: translateY(-1px);
+        }
+
+        .logo-preset-btn.active {
+            background-color: var(--color-point);
+            border-color: var(--color-hover);
+            color: #0f172a;
+            box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.15);
+            transform: scale(1.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.4);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.7);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.96) translateY(6px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop {
+            animation: popIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="pb-16">
+
+    <!-- Top Navigation & Theme Bar -->
+    <header class="sticky top-0 z-30 backdrop-blur-md bg-opacity-90 border-b theme-border" style="background-color: color-mix(in srgb, var(--bg-box) 88%, transparent);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Title + Borderless Header Settings Button -->
+            <div class="flex items-center gap-3">
+                <div id="headerLogoBox" onclick="openHeaderModal()" class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0" style="background-color: var(--color-point); color: #0f172a;" title="클릭하여 로고 및 헤더 제목 수정">
+                    <i class="ph-fill ph-check-square-offset text-2xl"></i>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 id="headerMainTitle" class="text-lg sm:text-xl font-bold tracking-tight">루틴 스튜디오</h1>
+                        <span id="headerBadgeText" class="text-xs px-2.5 py-0.5 rounded-full font-semibold badge-sub-accent">습관 & 목표 대시보드</span>
+                        <!-- Borderless & Boxless Settings Icon Button -->
+                        <button type="button" onclick="openHeaderModal()" class="header-settings-btn" title="헤더 제목 및 로고 아이콘 설정">
+                            <i class="ph-bold ph-gear-six text-lg"></i>
+                        </button>
+                    </div>
+                    <p id="headerTodayText" class="text-xs theme-subtext truncate">오늘의 작은 실천이 연속 달성을 만듭니다</p>
+                </div>
+            </div>
+
+            <!-- Theme Switcher & Customization Trigger -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- 4 Theme Quick Buttons -->
+                <div class="flex items-center p-1 rounded-xl border theme-border" style="background-color: var(--bg-main);">
+                    <button onclick="switchTheme('light')" id="themeBtn-light" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="ph-fill ph-sun text-amber-500"></i> 라이트
+                    </button>
+                    <button onclick="switchTheme('dark')" id="themeBtn-dark" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="ph-fill ph-moon-stars text-indigo-400"></i> 다크
+                    </button>
+                    <button onclick="switchTheme('pastel')" id="themeBtn-pastel" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="ph-fill ph-flower-lotus text-pink-400"></i> 파스텔
+                    </button>
+                    <button onclick="switchTheme('retro')" id="themeBtn-retro" class="theme-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all">
+                        <i class="ph-fill ph-cassette-tape text-orange-500"></i> 레트로
+                    </button>
+                </div>
+
+                <!-- Theme Color Customizer Button -->
+                <button onclick="toggleThemePanel()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1.5 transition-all">
+                    <i class="ph-bold ph-palette text-base"></i>
+                    <span>테마 색상 설정</span>
+                </button>
+
+                <!-- Category Manager Button -->
+                <button onclick="openCategoryModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border theme-box hover:shadow-sm flex items-center gap-1.5 transition-all">
+                    <i class="ph-bold ph-tag text-base"></i>
+                    <span>카테고리 관리</span>
+                </button>
+
+                <!-- Add New Habit Button -->
+                <button onclick="openHabitModal()" class="btn-accent px-4 py-2 rounded-xl text-xs sm:text-sm flex items-center gap-1.5 shadow-sm">
+                    <i class="ph-bold ph-plus-circle text-base"></i>
+                    <span>새 습관 등록</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsible Live Theme Color Customizer Panel -->
+        <div id="themeCustomPanel" class="hidden border-t theme-border transition-all" style="background-color: var(--bg-box);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: var(--color-hover);"></span>
+                        <h3 class="text-sm font-bold">
+                            <span id="customizingThemeTitle" class="underline decoration-2" style="text-decoration-color: var(--color-point);">라이트 모드</span> 실시간 색상 커스터마이징
+                        </h3>
+                        <span class="text-xs theme-subtext">각 테마별로 커스텀 색상이 자동 저장됩니다</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="resetCurrentThemeColors()" class="px-3 py-1.5 rounded-lg text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
+                            <i class="ph-bold ph-arrow-counter-clockwise"></i> 현재 테마 기본값 복원
+                        </button>
+                        <button onclick="toggleThemePanel()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                            <i class="ph-bold ph-x text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 6 Color Pickers Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <!-- Background Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-bg" oninput="updateThemeColor('bg', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">배경색 (--bg-main)</label>
+                            <input type="text" id="hex-bg" maxlength="7" onchange="updateThemeColorFromHex('bg', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Box Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-box" oninput="updateThemeColor('box', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">박스 색 (--bg-box)</label>
+                            <input type="text" id="hex-box" maxlength="7" onchange="updateThemeColorFromHex('box', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Accent Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-accent" oninput="updateThemeColor('accent', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">포인트색 (--color-point)</label>
+                            <input type="text" id="hex-accent" maxlength="7" onchange="updateThemeColorFromHex('accent', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Accent Hover Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-accentHover" oninput="updateThemeColor('accentHover', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">호버 색 (--color-hover)</label>
+                            <input type="text" id="hex-accentHover" maxlength="7" onchange="updateThemeColorFromHex('accentHover', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Sub Accent Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-subAccent" oninput="updateThemeColor('subAccent', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">작은 포인트 (--color-accent)</label>
+                            <input type="text" id="hex-subAccent" maxlength="7" onchange="updateThemeColorFromHex('subAccent', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+
+                    <!-- Text Color -->
+                    <div class="p-2.5 rounded-xl border theme-border flex items-center gap-2.5" style="background-color: var(--bg-main);">
+                        <input type="color" id="picker-text" oninput="updateThemeColor('text', this.value)">
+                        <div class="min-w-0 flex-1">
+                            <label class="block text-[11px] font-semibold theme-subtext">글자색 (--text-color)</label>
+                            <input type="text" id="hex-text" maxlength="7" onchange="updateThemeColorFromHex('text', this.value)"
+                                class="w-full bg-transparent text-xs font-mono font-bold focus:outline-none uppercase">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 space-y-5">
+
+        <!-- 1. Top Summary Cards (Slim 3-Column Layout) -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <!-- Card 1: Today's Goal Progress -->
+            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
+                            <i class="ph-fill ph-target text-base" style="color: var(--color-hover);"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">오늘의 목표 달성률</span>
+                            <div class="flex items-baseline gap-1.5 mt-0.5">
+                                <h2 id="statTodayPercent" class="text-xl sm:text-2xl font-extrabold leading-none">0%</h2>
+                                <span id="statTodayFraction" class="text-[11px] font-medium theme-subtext">(0/0 완료)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span id="statTodayBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-lg badge-sub-accent">진행 중</span>
+                </div>
+                <div class="mt-2.5">
+                    <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
+                        <div id="statTodayBar" class="progress-fill h-full rounded-full" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Weekly Overall Achievement -->
+            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style="background-color: color-mix(in srgb, var(--color-point) 32%, transparent);">
+                            <i class="ph-fill ph-calendar-check text-base" style="color: var(--color-hover);"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">선택 주간 달성률</span>
+                            <div class="flex items-baseline gap-1.5 mt-0.5">
+                                <h2 id="statWeekPercent" class="text-xl sm:text-2xl font-extrabold leading-none">0%</h2>
+                                <span id="statWeekFraction" class="text-[11px] font-medium theme-subtext">(0/0회)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span id="statWeekRangeMini" class="text-[11px] font-semibold theme-subtext">이번 주</span>
+                </div>
+                <div class="mt-2.5">
+                    <div class="w-full h-1.5 rounded-full overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
+                        <div id="statWeekBar" class="progress-fill h-full rounded-full" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Best Streak Highlight ("7일") -->
+            <div class="theme-box rounded-2xl px-4 py-3.5 shadow-xs flex flex-col justify-between">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 badge-sub-accent">
+                            <i class="ph-fill ph-fire text-base text-orange-500"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-semibold theme-subtext block leading-tight">현재 최고 연속 달성</span>
+                            <div class="flex items-baseline gap-1.5 mt-0.5">
+                                <h2 id="statBestStreak" class="text-xl sm:text-2xl font-extrabold leading-none">0일</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-lg text-[11px] font-bold badge-sub-accent flex items-center gap-1">
+                        <i class="ph-fill ph-trophy"></i> 최고 기록
+                    </span>
+                </div>
+                <div class="mt-2.5 flex items-center justify-between text-[11px] pt-1.5 border-t theme-border">
+                    <span class="theme-subtext">최장 연속 습관</span>
+                    <span id="statBestStreakHabit" class="font-bold truncate max-w-[180px]">-</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Main Interactive Workspace: Category Filters, Custom Sort Select & Weekly Habit Check Matrix -->
+        <section class="space-y-4">
+
+            <!-- Filter & Week Navigation Bar -->
+            <div class="theme-box rounded-2xl p-4 shadow-xs space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- Category Filter Tabs -->
+                    <div class="flex items-center gap-1.5 flex-wrap" id="categoryFilterTabs">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Quick Add Category & Habit Buttons -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="openCategoryModal()" class="text-xs font-semibold px-3 py-1.5 rounded-xl border border-dashed theme-border theme-subtext hover:opacity-80 flex items-center gap-1">
+                            <i class="ph-bold ph-palette"></i> 카테고리 편집
+                        </button>
+                        <button onclick="openHabitModal()" class="btn-accent px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow-2xs">
+                            <i class="ph-bold ph-plus"></i> 새 습관 등록
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1-Row Unified Bar: Week Navigation (Left) + Search & Custom Sort Select (Right) -->
+                <div class="pt-3 border-t theme-border flex items-center justify-between gap-3 flex-nowrap overflow-x-auto sm:overflow-visible">
+                    <!-- Left: Week Navigator -->
+                    <div class="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+                        <button onclick="changeWeek(-1)" class="px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center gap-1 shrink-0" title="이전 주">
+                            <i class="ph-bold ph-caret-left"></i> <span>이전 주</span>
+                        </button>
+                        <div class="px-3 py-1.5 rounded-xl border theme-border text-xs sm:text-sm font-bold inline-flex items-center gap-1.5 shrink-0" style="background-color: var(--bg-main);">
+                            <i class="ph-bold ph-calendar-blank" style="color: var(--color-hover);"></i>
+                            <span id="weekRangeLabel">2026년 10월 3주차 (10.12 ~ 10.18)</span>
+                        </div>
+                        <button onclick="changeWeek(1)" class="px-2.5 py-1.5 rounded-xl border theme-border hover:opacity-80 transition text-xs font-semibold inline-flex items-center gap-1 shrink-0" title="다음 주">
+                            <span>다음 주</span> <i class="ph-bold ph-caret-right"></i>
+                        </button>
+                        <button onclick="resetToCurrentWeek()" id="btnThisWeek" class="px-2.5 py-1.5 rounded-xl text-xs font-bold badge-sub-accent hover:opacity-90 transition shrink-0">
+                            이번 주
+                        </button>
+                    </div>
+
+                    <!-- Right: Search Input & Custom Sort Dropdown on the Exact Same Line -->
+                    <div class="flex items-center gap-2 flex-1 justify-end min-w-0 shrink-0 sm:shrink">
+                        <!-- Search Input -->
+                        <div class="relative w-36 sm:w-48 md:w-56 min-w-[120px]">
+                            <i class="ph ph-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 theme-subtext text-sm"></i>
+                            <input type="text" id="habitSearchInput" oninput="renderDashboard()" placeholder="습관 또는 목표 검색..."
+                                class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border theme-border bg-transparent accent-ring">
+                        </div>
+
+                        <!-- Custom Dropdown 1: Sort / View Filter -->
+                        <div class="custom-select-container w-36 sm:w-40 shrink-0" id="dropdown-sortFilter">
+                            <button type="button" onclick="toggleCustomDropdown('sortFilter', event)" id="trigger-sortFilter" class="custom-select-trigger !py-1.5 !px-3 !text-xs whitespace-nowrap">
+                                <span class="flex items-center gap-1.5 truncate">
+                                    <i class="ph-bold ph-arrows-down-up shrink-0" style="color: var(--color-hover);"></i>
+                                    <span id="label-sortFilter" class="truncate">기본 등록순</span>
+                                </span>
+                                <i class="ph-bold ph-caret-down custom-select-caret text-xs shrink-0"></i>
+                            </button>
+                            <div id="menu-sortFilter" class="custom-select-menu right-0 left-auto min-w-[160px]">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Habit Matrix Table Card -->
+            <div class="theme-box rounded-2xl shadow-xs overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[780px]">
+                        <thead>
+                            <tr id="matrixHeaderRow" class="border-b theme-border text-xs theme-subtext">
+                                <!-- Populated by JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="matrixBody" class="divide-y theme-border text-sm">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyHabitState" class="hidden p-12 text-center space-y-3">
+                    <div class="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center badge-sub-accent">
+                        <i class="ph-fill ph-sparkle text-2xl"></i>
+                    </div>
+                    <h3 class="text-base font-bold">표시할 습관이 없습니다</h3>
+                    <p class="text-xs theme-subtext">새 습관을 등록하거나 다른 카테고리 필터를 선택해 보세요.</p>
+                    <button onclick="openHabitModal()" class="btn-accent px-4 py-2 rounded-xl text-xs inline-flex items-center gap-1.5">
+                        <i class="ph-bold ph-plus"></i> 첫 습관 만들기
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==========================================
+         MODAL 1: Habit Add / Edit Modal
+         (Rich 60+ Icon Picker + Custom Icon Registration + Custom Dropdowns)
+         ========================================== -->
+    <div id="habitModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+        <div class="theme-box rounded-2xl max-w-xl w-full p-6 shadow-xl space-y-4 animate-pop my-8">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div>
+                    <h3 id="habitModalTitle" class="text-lg font-bold">새 습관 등록</h3>
+                    <p class="text-xs theme-subtext mt-0.5">아이콘과 일일 목표, 나에게 맞는 실천 주기를 설정하세요</p>
+                </div>
+                <button type="button" onclick="closeHabitModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <form id="habitForm" onsubmit="handleHabitSubmit(event)" class="space-y-4">
+                <input type="hidden" id="habitIdInput">
+                <input type="hidden" id="habitIconInput" value="💧">
+                <input type="hidden" id="habitCategoryInput" value="">
+
+                <!-- Icon Trigger & Habit Name -->
+                <div class="flex items-start gap-3">
+                    <!-- Selected Icon Trigger Button -->
+                    <div class="shrink-0">
+                        <label class="block text-xs font-bold mb-1.5">아이콘</label>
+                        <button type="button" onclick="toggleIconPickerPanel()" id="habitIconTriggerBtn"
+                            class="h-[42px] px-3 rounded-xl border theme-border flex items-center gap-2 hover:shadow-xs transition"
+                            style="background-color: var(--bg-main);" title="클릭하여 아이콘 선택 또는 직접 등록">
+                            <span id="selectedIconPreview" class="text-xl leading-none">💧</span>
+                            <i class="ph-bold ph-caret-down text-xs theme-subtext" id="iconPickerCaret"></i>
+                        </button>
+                    </div>
+
+                    <!-- Habit Name Input -->
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold mb-1.5">습관 이름 *</label>
+                        <input type="text" id="habitNameInput" required maxlength="40" placeholder="예: 아침 스트레칭 15분"
+                            class="w-full h-[42px] px-3.5 rounded-xl border theme-border bg-transparent text-sm accent-ring">
+                    </div>
+                </div>
+
+                <!-- Expandable Rich Icon Library + Custom Icon Creator Panel -->
+                <div id="iconPickerPanel" class="hidden p-3.5 rounded-2xl border theme-border space-y-3 animate-pop" style="background-color: var(--bg-main);">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <i class="ph-fill ph-sparkle" style="color: var(--color-hover);"></i>
+                            <span class="text-xs font-bold">아이콘 라이브러리 & 나만의 아이콘 등록</span>
+                        </div>
+                        <button type="button" onclick="toggleIconPickerPanel()" class="text-[11px] font-bold px-2 py-0.5 rounded-lg border theme-border hover:opacity-80">
+                            접기
+                        </button>
+                    </div>
+
+                    <!-- Custom Icon Input Row -->
+                    <div class="flex items-center gap-2 p-2 rounded-xl border theme-border" style="background-color: var(--bg-box);">
+                        <input type="text" id="customIconTextInput" maxlength="4"
+                            placeholder="원하는 이모지나 짧은 글자 입력 (예: 🧘‍♀️, 🎸, 영단, 비타민)"
+                            onkeydown="if(event.key==='Enter'){event.preventDefault(); registerCustomIcon();}"
+                            class="flex-1 px-2.5 py-1.5 text-xs bg-transparent focus:outline-none">
+                        <button type="button" onclick="registerCustomIcon()" class="btn-accent px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1">
+                            <i class="ph-bold ph-plus"></i> 아이콘 등록
+                        </button>
+                    </div>
+
+                    <!-- Icon Category Tabs -->
+                    <div class="flex items-center gap-1 flex-wrap" id="iconCategoryTabs">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- 60+ Icons Grid -->
+                    <div id="iconLibraryGrid" class="grid grid-cols-7 sm:grid-cols-9 gap-1.5 max-h-44 overflow-y-auto p-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Daily Target Description -->
+                <div>
+                    <label class="block text-xs font-bold mb-1.5">일일 목표치 (세부 실천 기준)</label>
+                    <input type="text" id="habitGoalInput" maxlength="60" placeholder="예: 기상 직후 물 1컵 + 전신 스트레칭"
+                        class="w-full p-2.5 px-3.5 rounded-xl border theme-border bg-transparent text-sm accent-ring">
+                </div>
+
+                <!-- Category Selection (Custom Dropdown 2) OR Instant Creation -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold">카테고리 선택 *</label>
+                        <button type="button" onclick="toggleInlineCategoryCreator()" id="btnToggleInlineCat"
+                            class="text-xs font-bold underline" style="color: var(--color-hover);">
+                            + 새 카테고리 직접 입력
+                        </button>
+                    </div>
+
+                    <!-- Custom Dropdown for Category -->
+                    <div class="custom-select-container" id="dropdown-habitCategory">
+                        <button type="button" onclick="toggleCustomDropdown('habitCategory', event)" id="trigger-habitCategory" class="custom-select-trigger">
+                            <span id="label-habitCategory" class="flex items-center gap-2 truncate">
+                                <!-- Populated by JS -->
+                            </span>
+                            <i class="ph-bold ph-caret-down custom-select-caret text-sm"></i>
+                        </button>
+                        <div id="menu-habitCategory" class="custom-select-menu">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Inline New Category Creator Box -->
+                    <div id="inlineCategoryCreator" class="hidden p-3 rounded-xl border theme-border space-y-2.5 animate-pop" style="background-color: var(--bg-main);">
+                        <div class="text-xs font-bold flex items-center justify-between">
+                            <span>새 카테고리 즉석 추가</span>
+                            <span class="text-[11px] theme-subtext">색상과 이름을 지정하세요</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="inlineCatColorInput" value="#a0d6ff">
+                            <input type="text" id="inlineCatNameInput" maxlength="20" placeholder="카테고리 이름 (예: 외국어)"
+                                onkeydown="if(event.key==='Enter'){event.preventDefault(); createInlineCategory();}"
+                                class="flex-1 p-2 rounded-lg border theme-border bg-transparent text-xs accent-ring">
+                            <button type="button" onclick="createInlineCategory()" class="btn-accent px-3 py-2 rounded-lg text-xs whitespace-nowrap">
+                                추가 후 선택
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Frequency / Schedule Selector -->
+                <div class="space-y-2.5 pt-2 border-t theme-border">
+                    <label class="block text-xs font-bold">실천 주기 설정 *</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onclick="setFrequencyType('daily')" id="freqBtn-daily"
+                            class="freq-type-btn py-2 px-2.5 rounded-xl text-xs font-bold border theme-border transition">
+                            매일
+                        </button>
+                        <button type="button" onclick="setFrequencyType('interval')" id="freqBtn-interval"
+                            class="freq-type-btn py-2 px-2.5 rounded-xl text-xs font-bold border theme-border transition">
+                            N일 간격
+                        </button>
+                        <button type="button" onclick="setFrequencyType('days')" id="freqBtn-days"
+                            class="freq-type-btn py-2 px-2.5 rounded-xl text-xs font-bold border theme-border transition">
+                            요일 지정
+                        </button>
+                        <button type="button" onclick="setFrequencyType('weekly_count')" id="freqBtn-weekly_count"
+                            class="freq-type-btn py-2 px-2.5 rounded-xl text-xs font-bold border theme-border transition">
+                            주 N회
+                        </button>
+                    </div>
+
+                    <!-- Option 1: Daily -->
+                    <div id="freqConfig-daily" class="p-3 rounded-xl border theme-border text-xs theme-subtext" style="background-color: var(--bg-main);">
+                        월요일부터 일요일까지 <strong>매일</strong> 실천하는 기본 루틴입니다.
+                    </div>
+
+                    <!-- Option 2: Every N Days (Custom Dropdown 3) -->
+                    <div id="freqConfig-interval" class="hidden p-3.5 rounded-xl border theme-border space-y-3" style="background-color: var(--bg-main);">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label class="text-xs font-bold">반복 간격 선택</label>
+                            <!-- Custom Dropdown for N-Day Interval -->
+                            <div class="custom-select-container w-56" id="dropdown-freqInterval">
+                                <button type="button" onclick="toggleCustomDropdown('freqInterval', event)" id="trigger-freqInterval" class="custom-select-trigger !py-2">
+                                    <span id="label-freqInterval" class="truncate">2일마다 (이틀에 한 번)</span>
+                                    <i class="ph-bold ph-caret-down custom-select-caret text-xs"></i>
+                                </button>
+                                <div id="menu-freqInterval" class="custom-select-menu">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label class="text-xs font-semibold theme-subtext">첫 실천 기준일</label>
+                            <input type="date" id="freqIntervalAnchor" class="p-1.5 px-3 rounded-xl border theme-border text-xs font-semibold accent-ring" style="background-color: var(--bg-box); color: var(--text-color);">
+                        </div>
+                        <p class="text-[11px] theme-subtext">기준일로부터 선택한 간격마다 실천 예정일로 표시되며, 사이 날짜는 쉬는 날이 됩니다.</p>
+                    </div>
+
+                    <!-- Option 3: Specific Days of Week (Mon=1 ... Sun=0) -->
+                    <div id="freqConfig-days" class="hidden p-3.5 rounded-xl border theme-border space-y-2" style="background-color: var(--bg-main);">
+                        <span class="text-xs font-bold block">실천할 요일 선택 (복수 선택 가능)</span>
+                        <div class="flex items-center justify-between gap-1 pt-1">
+                            <button type="button" onclick="toggleSpecificDay(1)" id="dayBtn-1" class="day-Select-btn">월</button>
+                            <button type="button" onclick="toggleSpecificDay(2)" id="dayBtn-2" class="day-Select-btn">화</button>
+                            <button type="button" onclick="toggleSpecificDay(3)" id="dayBtn-3" class="day-Select-btn">수</button>
+                            <button type="button" onclick="toggleSpecificDay(4)" id="dayBtn-4" class="day-Select-btn">목</button>
+                            <button type="button" onclick="toggleSpecificDay(5)" id="dayBtn-5" class="day-Select-btn">금</button>
+                            <button type="button" onclick="toggleSpecificDay(6)" id="dayBtn-6" class="day-Select-btn">토</button>
+                            <button type="button" onclick="toggleSpecificDay(0)" id="dayBtn-0" class="day-Select-btn">일</button>
+                        </div>
+                    </div>
+
+                    <!-- Option 4: Weekly N times (Custom Dropdown 4) -->
+                    <div id="freqConfig-weekly_count" class="hidden p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <label class="text-xs font-bold">주간 목표 횟수</label>
+                            <!-- Custom Dropdown for Weekly Count -->
+                            <div class="custom-select-container w-48" id="dropdown-freqWeekly">
+                                <button type="button" onclick="toggleCustomDropdown('freqWeekly', event)" id="trigger-freqWeekly" class="custom-select-trigger !py-2">
+                                    <span id="label-freqWeekly" class="truncate">주 3회 달성</span>
+                                    <i class="ph-bold ph-caret-down custom-select-caret text-xs"></i>
+                                </button>
+                                <div id="menu-freqWeekly" class="custom-select-menu">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] theme-subtext">특정 요일에 얽매이지 않고 한 주 동안 목표 횟수만 채우면 100% 달성됩니다.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t theme-border">
+                    <button type="button" onclick="closeHabitModal()" class="px-4 py-2 rounded-xl text-xs font-semibold border theme-border hover:opacity-80">
+                        취소
+                    </button>
+                    <button type="submit" class="btn-accent px-5 py-2 rounded-xl text-xs font-bold">
+                        저장하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL 2: No-Code Category Manager Modal (Edit Name, Color, Add, Delete)
+         ========================================== -->
+    <div id="categoryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+        <div class="theme-box rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-5 animate-pop">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div>
+                    <h3 class="text-lg font-bold">카테고리 관리 (이름 · 색상 실시간 수정)</h3>
+                    <p class="text-xs theme-subtext mt-0.5">카테고리 이름이나 색상을 바꾸면 모든 습관 배지에 즉시 반영됩니다.</p>
+                </div>
+                <button onclick="closeCategoryModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Add New Category Bar -->
+            <div class="p-3.5 rounded-xl border theme-border space-y-2.5" style="background-color: var(--bg-main);">
+                <label class="block text-xs font-bold">새 카테고리 추가</label>
+                <div class="flex items-center gap-2">
+                    <input type="color" id="newCategoryColor" value="#7dd3fc">
+                    <input type="text" id="newCategoryName" maxlength="20" placeholder="새 카테고리 이름 입력 (예: 외국어, 재테크)"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault(); addNewCategoryFromManager();}"
+                        class="flex-1 p-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm accent-ring">
+                    <button onclick="addNewCategoryFromManager()" class="btn-accent px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">
+                        <i class="ph-bold ph-plus"></i> 추가
+                    </button>
+                </div>
+                <!-- Quick Preset Swatches -->
+                <div class="flex items-center gap-1.5 pt-1">
+                    <span class="text-[11px] theme-subtext mr-1">추천 팔레트:</span>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#a0d6ff'" class="w-5 h-5 rounded-full border border-black/10" style="background:#a0d6ff"></button>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#ffe8a0'" class="w-5 h-5 rounded-full border border-black/10" style="background:#ffe8a0"></button>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#ffb4c8'" class="w-5 h-5 rounded-full border border-black/10" style="background:#ffb4c8"></button>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#b4f0c8'" class="w-5 h-5 rounded-full border border-black/10" style="background:#b4f0c8"></button>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#d8b4fe'" class="w-5 h-5 rounded-full border border-black/10" style="background:#d8b4fe"></button>
+                    <button type="button" onclick="document.getElementById('newCategoryColor').value='#fdba74'" class="w-5 h-5 rounded-full border border-black/10" style="background:#fdba74"></button>
+                </div>
+            </div>
+
+            <!-- Existing Category Editable List -->
+            <div class="space-y-2 max-h-72 overflow-y-auto pr-1" id="categoryManagerList">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="flex items-center justify-end pt-3 border-t theme-border">
+                <button onclick="closeCategoryModal()" class="btn-accent px-5 py-2 rounded-xl text-xs font-bold">
+                    완료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL 3: Header & Logo Customization Modal
+         ========================================== -->
+    <div id="headerModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-xs overflow-y-auto">
+        <div class="theme-box rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-5 animate-pop my-8">
+            <div class="flex items-center justify-between border-b theme-border pb-3">
+                <div>
+                    <h3 class="text-lg font-bold">헤더 & 로고 설정</h3>
+                    <p class="text-xs theme-subtext mt-0.5">대시보드 상단의 로고 아이콘과 제목·배지·슬로건 문구를 자유롭게 변경하세요</p>
+                </div>
+                <button type="button" onclick="closeHeaderModal()" class="p-1.5 rounded-lg border theme-border hover:opacity-75">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <form id="headerConfigForm" onsubmit="saveHeaderConfig(event)" class="space-y-4">
+                <!-- Live Preview Card -->
+                <div class="p-3.5 rounded-2xl border theme-border space-y-1.5" style="background-color: var(--bg-main);">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold theme-subtext">실시간 미리보기</span>
+                        <span class="text-[11px] theme-subtext">현재 테마 색상 연동</span>
+                    </div>
+                    <div class="flex items-center gap-3 pt-1">
+                        <div id="previewHeaderLogoBox" class="w-10 h-10 rounded-2xl flex items-center justify-center shadow-sm shrink-0" style="background-color: var(--color-point); color: #0f172a;">
+                            <i class="ph-fill ph-check-square-offset text-2xl"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span id="previewHeaderTitle" class="text-base sm:text-lg font-bold tracking-tight">루틴 스튜디오</span>
+                                <span id="previewHeaderBadge" class="text-xs px-2.5 py-0.5 rounded-full font-semibold badge-sub-accent">습관 & 목표 대시보드</span>
+                            </div>
+                            <p id="previewHeaderSlogan" class="text-xs theme-subtext truncate mt-0.5">오늘의 작은 실천이 연속 달성을 만듭니다</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Logo Icon Selector (SVG Icons + Emojis + Custom Input) -->
+                <div class="space-y-2.5">
+                    <label class="block text-xs font-bold">로고 아이콘 선택</label>
+
+                    <!-- Preset SVG Vector Icons -->
+                    <div>
+                        <span class="text-[11px] theme-subtext block mb-1.5">기본 심볼 아이콘</span>
+                        <div id="headerSvgLogoGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-1.5">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Preset Emoji / Text Icons -->
+                    <div>
+                        <span class="text-[11px] theme-subtext block mb-1.5">추천 이모지 & 직접 입력</span>
+                        <div id="headerEmojiLogoGrid" class="grid grid-cols-6 sm:grid-cols-6 gap-1.5 mb-2">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="headerCustomLogoInput" maxlength="4"
+                                placeholder="원하는 이모지나 짧은 문자 직접 입력 (예: 🌿, 🎯, MY, 루틴)"
+                                oninput="onCustomHeaderLogoInput(this.value)"
+                                class="flex-1 px-3 py-2 rounded-xl border theme-border bg-transparent text-xs accent-ring">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Text Inputs for Title, Badge, and Slogan -->
+                <div class="space-y-3 pt-2 border-t theme-border">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold mb-1">메인 제목 *</label>
+                            <input type="text" id="headerTitleInput" required maxlength="30"
+                                placeholder="예: 루틴 스튜디오"
+                                oninput="updateHeaderModalPreview()"
+                                class="w-full px-3 py-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm font-semibold accent-ring">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold mb-1">옆 배지 문구 <span class="font-normal theme-subtext">(비우면 숨김)</span></label>
+                            <input type="text" id="headerBadgeInput" maxlength="25"
+                                placeholder="예: 습관 & 목표 대시보드"
+                                oninput="updateHeaderModalPreview()"
+                                class="w-full px-3 py-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm font-semibold accent-ring">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold mb-1">하단 슬로건 / 다짐 문구 <span class="font-normal theme-subtext">(비우면 숨김)</span></label>
+                        <input type="text" id="headerSloganInput" maxlength="60"
+                            placeholder="예: 오늘의 작은 실천이 연속 달성을 만듭니다"
+                            oninput="updateHeaderModalPreview()"
+                            class="w-full px-3 py-2 rounded-xl border theme-border bg-transparent text-xs sm:text-sm accent-ring">
+                    </div>
+
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none pt-0.5">
+                        <input type="checkbox" id="headerShowDateCheck" onchange="updateHeaderModalPreview()"
+                            class="w-4 h-4 rounded accent-sky-500 cursor-pointer">
+                        <span class="text-xs font-medium theme-subtext">하단 문구 앞에 오늘 날짜(년/월/일/요일) 함께 표시하기</span>
+                    </label>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex items-center justify-between gap-2 pt-3 border-t theme-border">
+                    <button type="button" onclick="resetHeaderConfigToDefault()" class="px-3.5 py-2 rounded-xl text-xs font-semibold border theme-border hover:opacity-80 flex items-center gap-1">
+                        <i class="ph-bold ph-arrow-counter-clockwise"></i> 기본값 복원
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeHeaderModal()" class="px-4 py-2 rounded-xl text-xs font-semibold border theme-border hover:opacity-80">
+                            취소
+                        </button>
+                        <button type="submit" class="btn-accent px-5 py-2 rounded-xl text-xs font-bold">
+                            저장하기
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        /* =========================================================================
+           1. DEFAULT THEME PRESETS, 60+ ICON LIBRARY & STATE MANAGEMENT
+           ========================================================================= */
+        const DEFAULT_THEMES = {
+            light: {
+                label: '라이트 모드',
+                bg: '#fcfcfc',
+                box: '#ffffff',
+                accent: '#a0d6ff',
+                accentHover: '#54abee',
+                subAccent: '#ffe8a0',
+                text: '#1e293b',
+                subtext: '#64748b',
+                border: '#e5e7eb'
+            },
+            dark: {
+                label: '다크 모드',
+                bg: '#0f172a',
+                box: '#1e293b',
+                accent: '#38bdf8',
+                accentHover: '#0284c7',
+                subAccent: '#fde047',
+                text: '#f1f5f9',
+                subtext: '#94a3b8',
+                border: '#334155'
+            },
+            pastel: {
+                label: '파스텔 테마',
+                bg: '#fdf8f5',
+                box: '#ffffff',
+                accent: '#ffcad4',
+                accentHover: '#f497a9',
+                subAccent: '#cdeac0',
+                text: '#4a403a',
+                subtext: '#8c7a6b',
+                border: '#f2e3db'
+            },
+            retro: {
+                label: '레트로 테마',
+                bg: '#f4ebd9',
+                box: '#fffdf7',
+                accent: '#e07a5f',
+                accentHover: '#c85a3d',
+                subAccent: '#f2cc8f',
+                text: '#2b2d42',
+                subtext: '#6c757d',
+                border: '#dccbb1'
+            }
+        };
+
+        // 65+ Curated Icons Categorized for Habit Tracking
+        const ICON_LIBRARY = {
+            health: {
+                label: '건강/운동',
+                icons: ['💧', '🏃', '🧘', '🥗', '💊', '🏋️', '🚴', '🏊', '🤸', '🥊', '🍎', '🥑', '🥛', '👟', '❤️‍🩹']
+            },
+            study: {
+                label: '학습/성장',
+                icons: ['📚', '✍️', '💻', '🎓', '🧠', '🗣️', '📝', '🔬', '📖', '🎧', '📰', '💡', '🔍', '🌐']
+            },
+            life: {
+                label: '생활/루틴',
+                icons: ['🌅', '🧹', '🛏️', '🚿', '🧺', '🪴', '🍵', '☀️', '🌙', '⏰', '🦷', '🧴', '🛒', '🐶']
+            },
+            hobby: {
+                label: '취미/마인드',
+                icons: ['🎸', '🎨', '🎹', '📷', '🙏', '🌿', '🎵', '🎬', '🧶', '✈️', '🏕️', '🎲', '💌']
+            },
+            work: {
+                label: '생산성/재테크',
+                icons: ['💰', '📈', '🏦', '📊', '🗂️', '📅', '✉️', '🎯', '🚀', '🏆', '⚡', '⭐', '🔥', '💎']
+            }
+        };
+
+        const SORT_OPTIONS = [
+            { value: 'default', label: '기본 등록순' },
+            { value: 'category', label: '카테고리별 정렬' },
+            { value: 'streak_desc', label: '연속 달성 높은순' },
+            { value: 'rate_desc', label: '주간 달성률 높은순' },
+            { value: 'today_first', label: '오늘 실천 예정 우선' }
+        ];
+
+        const INTERVAL_OPTIONS = [
+            { value: 2, label: '2일마다 (이틀에 한 번)' },
+            { value: 3, label: '3일마다 (사흘에 한 번)' },
+            { value: 4, label: '4일마다 실천' },
+            { value: 5, label: '5일마다 실천' },
+            { value: 6, label: '6일마다 실천' },
+            { value: 7, label: '7일마다 (일주일 간격)' }
+        ];
+
+        const WEEKLY_COUNT_OPTIONS = [
+            { value: 1, label: '주 1회 달성' },
+            { value: 2, label: '주 2회 달성' },
+            { value: 3, label: '주 3회 달성' },
+            { value: 4, label: '주 4회 달성' },
+            { value: 5, label: '주 5회 달성' },
+            { value: 6, label: '주 6회 달성' }
+        ];
+
+        const DEFAULT_HEADER_CONFIG = {
+            logoType: 'ph', // 'ph' (Phosphor icon class) or 'text' (Emoji / short string)
+            logoValue: 'ph-check-square-offset',
+            title: '루틴 스튜디오',
+            badge: '습관 & 목표 대시보드',
+            slogan: '오늘의 작은 실천이 연속 달성을 만듭니다',
+            showDate: true
+        };
+
+        const HEADER_SVG_PRESETS = [
+            { id: 'ph-check-square-offset', label: '체크박스' },
+            { id: 'ph-fire', label: '불꽃' },
+            { id: 'ph-target', label: '타겟' },
+            { id: 'ph-trophy', label: '트로피' },
+            { id: 'ph-star', label: '별' },
+            { id: 'ph-heart', label: '하트' },
+            { id: 'ph-rocket-launch', label: '로켓' },
+            { id: 'ph-book-open-text', label: '독서/노트' },
+            { id: 'ph-sparkle', label: '반짝임' },
+            { id: 'ph-calendar-check', label: '달력' },
+            { id: 'ph-lightning', label: '번개' },
+            { id: 'ph-plant', label: '새싹' }
+        ];
+
+        const HEADER_EMOJI_PRESETS = ['🌿', '🔥', '🎯', '✨', '💻', '📚', '💪', '🌈', '☀️', '💎', '🚀', '🏆'];
+
+        const STORAGE_KEY = 'interactive_habit_dashboard_v3';
+
+        /* =========================================================================
+           2. LOCAL DATE & CALENDAR UTILITIES (NO UTC SHIFT BUGS)
+           ========================================================================= */
+        function formatDateKey(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function parseDateKeyLocal(dateStr) {
+            if (!dateStr) return new Date(TODAY);
+            const parts = dateStr.split('-').map(Number);
+            if (parts.length !== 3) return new Date(TODAY);
+            return new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+        }
+
+        function addDays(dateObj, days) {
+            const copy = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0, 0);
+            copy.setDate(copy.getDate() + days);
+            return copy;
+        }
+
+        function diffDaysLocal(dateA, dateB) {
+            const utcA = Date.UTC(dateA.getFullYear(), dateA.getMonth(), dateA.getDate());
+            const utcB = Date.UTC(dateB.getFullYear(), dateB.getMonth(), dateB.getDate());
+            return Math.round((utcA - utcB) / (1000 * 60 * 60 * 24));
+        }
+
+        function getMondayOfWeek(dateObj) {
+            const copy = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0, 0);
+            const day = copy.getDay();
+            const diff = (day === 0 ? -6 : 1) - day;
+            copy.setDate(copy.getDate() + diff);
+            return copy;
+        }
+
+        function formatKoreanWeekRangeLabel(weekDays) {
+            const firstDay = weekDays[0].dateObj;
+            const lastDay = weekDays[6].dateObj;
+            const thursday = weekDays[3].dateObj;
+
+            const year = thursday.getFullYear();
+            const month = thursday.getMonth() + 1;
+
+            const firstOfMonth = new Date(year, thursday.getMonth(), 1);
+            const firstDayOfWeek = firstOfMonth.getDay();
+            const offsetToFirstThu = (4 - firstDayOfWeek + 7) % 7;
+            const firstThursdayDate = 1 + offsetToFirstThu;
+            const weekNo = Math.floor((thursday.getDate() - firstThursdayDate) / 7) + 1;
+
+            const startM = String(firstDay.getMonth() + 1).padStart(2, '0');
+            const startD = String(firstDay.getDate()).padStart(2, '0');
+            const endM = String(lastDay.getMonth() + 1).padStart(2, '0');
+            const endD = String(lastDay.getDate()).padStart(2, '0');
+
+            return `${year}년 ${month}월 ${weekNo}주차 (${startM}.${startD} ~ ${endM}.${endD})`;
+        }
+
+        const TODAY = new Date();
+        TODAY.setHours(0, 0, 0, 0);
+        const TODAY_KEY = formatDateKey(TODAY);
+
+        let currentWeekOffset = 0;
+        let selectedCategoryFilter = 'ALL';
+        let currentSortBy = 'default';
+
+        // Modal states
+        let activeIconTab = 'all';
+        let modalFreqType = 'daily';
+        let modalIntervalDays = 2;
+        let modalWeeklyCount = 3;
+        let modalSelectedDays = [1, 3, 5];
+        let activeOpenDropdownId = null;
+
+        function createInitialSampleState() {
+            const d0 = formatDateKey(TODAY);
+            const d1 = formatDateKey(addDays(TODAY, -1));
+            const d2 = formatDateKey(addDays(TODAY, -2));
+            const d3 = formatDateKey(addDays(TODAY, -3));
+            const d4 = formatDateKey(addDays(TODAY, -4));
+            const d5 = formatDateKey(addDays(TODAY, -5));
+            const d6 = formatDateKey(addDays(TODAY, -6));
+
+            return {
+                activeTheme: 'light',
+                themes: JSON.parse(JSON.stringify(DEFAULT_THEMES)),
+                headerConfig: JSON.parse(JSON.stringify(DEFAULT_HEADER_CONFIG)),
+                customIcons: ['🧘‍♀️', '영단', '비타민'],
+                categories: [
+                    { id: 'cat_health', name: '건강 · 운동', color: '#a0d6ff' },
+                    { id: 'cat_growth', name: '자기계발', color: '#ffe8a0' },
+                    { id: 'cat_mind', name: '마음챙김', color: '#c4b5fd' },
+                    { id: 'cat_life', name: '생활 루틴', color: '#99f6e4' }
+                ],
+                habits: [
+                    {
+                        id: 'hab_1',
+                        name: '하루 물 2L 마시기',
+                        goal: '기상 직후 1컵 + 텀블러 4회 채우기',
+                        icon: '💧',
+                        categoryId: 'cat_health',
+                        frequency: { type: 'daily' },
+                        checks: { [d6]: true, [d5]: true, [d4]: true, [d3]: true, [d2]: true, [d1]: true, [d0]: true }
+                    },
+                    {
+                        id: 'hab_2',
+                        name: '고강도 러닝 & 코어 운동',
+                        goal: '인터벌 러닝 3km 또는 홈트 40분',
+                        icon: '🏃',
+                        categoryId: 'cat_health',
+                        frequency: { type: 'interval', interval: 2, anchorDate: d6 },
+                        checks: { [d6]: true, [d4]: true, [d2]: true, [d0]: true }
+                    },
+                    {
+                        id: 'hab_3',
+                        name: '원서 독서 및 인사이트 요약',
+                        goal: '최소 20페이지 읽고 핵심 문장 기록',
+                        icon: '📚',
+                        categoryId: 'cat_growth',
+                        frequency: { type: 'days', days: [1, 3, 5] },
+                        checks: { [d5]: true, [d3]: true, [d1]: true, [d0]: true }
+                    },
+                    {
+                        id: 'hab_4',
+                        name: '아침 명상 & 우선순위 3가지 정리',
+                        goal: '업무 시작 전 10분 호흡 명상과 플래닝',
+                        icon: '🧘‍♀️',
+                        categoryId: 'cat_mind',
+                        frequency: { type: 'daily' },
+                        checks: { [d3]: true, [d2]: true, [d1]: true, [d0]: true }
+                    },
+                    {
+                        id: 'hab_5',
+                        name: '방 청소 및 데스크 정돈',
+                        goal: '책상 위 불필요한 물건 정리 및 환기',
+                        icon: '🧹',
+                        categoryId: 'cat_life',
+                        frequency: { type: 'weekly_count', count: 3 },
+                        checks: { [d4]: true, [d2]: true, [d0]: true }
+                    }
+                ]
+            };
+        }
+
+        let appState = loadState();
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('interactive_habit_dashboard_v2');
+                if (!raw) return createInitialSampleState();
+                const parsed = JSON.parse(raw);
+                parsed.themes = { ...JSON.parse(JSON.stringify(DEFAULT_THEMES)), ...(parsed.themes || {}) };
+                parsed.headerConfig = { ...JSON.parse(JSON.stringify(DEFAULT_HEADER_CONFIG)), ...(parsed.headerConfig || {}) };
+                parsed.customIcons = Array.isArray(parsed.customIcons) ? parsed.customIcons : ['🧘‍♀️', '영단', '비타민'];
+                parsed.categories = parsed.categories || [];
+                parsed.habits = (parsed.habits || []).map(h => ({
+                    ...h,
+                    frequency: h.frequency || { type: 'daily' }
+                }));
+                return parsed;
+            } catch (e) {
+                return createInitialSampleState();
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('Failed to save state:', e);
+            }
+        }
+
+        /* =========================================================================
+           3. THEME & LIVE COLOR CUSTOMIZATION LOGIC
+           ========================================================================= */
+        function applyCurrentThemeToDOM() {
+            const themeKey = appState.activeTheme || 'light';
+            const themeObj = appState.themes[themeKey] || DEFAULT_THEMES.light;
+
+            const root = document.documentElement;
+            root.style.setProperty('--bg-main', themeObj.bg);
+            root.style.setProperty('--bg-box', themeObj.box);
+            root.style.setProperty('--color-point', themeObj.accent);
+            root.style.setProperty('--color-hover', themeObj.accentHover);
+            root.style.setProperty('--color-accent', themeObj.subAccent);
+            root.style.setProperty('--text-color', themeObj.text);
+            root.style.setProperty('--subtext-color', themeObj.subtext);
+            root.style.setProperty('--border-color', themeObj.border);
+
+            ['light', 'dark', 'pastel', 'retro'].forEach(k => {
+                const btn = document.getElementById(`themeBtn-${k}`);
+                if (!btn) return;
+                if (k === themeKey) {
+                    btn.style.backgroundColor = 'var(--color-point)';
+                    btn.style.color = '#0f172a';
+                } else {
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = 'var(--text-color)';
+                }
+            });
+
+            document.getElementById('customizingThemeTitle').textContent = themeObj.label;
+            const fields = ['bg', 'box', 'accent', 'accentHover', 'subAccent', 'text'];
+            fields.forEach(f => {
+                const picker = document.getElementById(`picker-${f}`);
+                const hexInput = document.getElementById(`hex-${f}`);
+                if (picker && themeObj[f]) picker.value = normalizeHex(themeObj[f]);
+                if (hexInput && themeObj[f]) hexInput.value = themeObj[f].toUpperCase();
+            });
+        }
+
+        function normalizeHex(val) {
+            if (!val) return '#000000';
+            val = val.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) return val;
+            return '#000000';
+        }
+
+        function switchTheme(themeKey) {
+            appState.activeTheme = themeKey;
+            saveState();
+            applyCurrentThemeToDOM();
+            showToast(`${appState.themes[themeKey].label}가 적용되었습니다.`);
+        }
+
+        function toggleThemePanel() {
+            const panel = document.getElementById('themeCustomPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function updateThemeColor(field, value) {
+            const themeKey = appState.activeTheme;
+            appState.themes[themeKey][field] = value;
+            saveState();
+            applyCurrentThemeToDOM();
+        }
+
+        function updateThemeColorFromHex(field, hexValue) {
+            let cleaned = hexValue.trim();
+            if (!cleaned.startsWith('#')) cleaned = '#' + cleaned;
+            if (/^#[0-9A-Fa-f]{6}$/.test(cleaned)) {
+                updateThemeColor(field, cleaned);
+            } else {
+                applyCurrentThemeToDOM();
+                showToast('올바른 HEX 색상 코드(예: #A0D6FF)를 입력해 주세요.');
+            }
+        }
+
+        function resetCurrentThemeColors() {
+            const themeKey = appState.activeTheme;
+            appState.themes[themeKey] = JSON.parse(JSON.stringify(DEFAULT_THEMES[themeKey]));
+            saveState();
+            applyCurrentThemeToDOM();
+            showToast(`${appState.themes[themeKey].label} 색상이 기본값으로 복원되었습니다.`);
+        }
+
+        /* =========================================================================
+           4. CUSTOM DROPDOWN UI ENGINE (REPLACES ALL NATIVE <SELECT>)
+           ========================================================================= */
+        function toggleCustomDropdown(dropdownId, event) {
+            if (event) event.stopPropagation();
+            if (activeOpenDropdownId && activeOpenDropdownId !== dropdownId) {
+                closeCustomDropdown(activeOpenDropdownId);
+            }
+            const trigger = document.getElementById(`trigger-${dropdownId}`);
+            const menu = document.getElementById(`menu-${dropdownId}`);
+            if (!trigger || !menu) return;
+
+            const isOpen = menu.classList.contains('open');
+            if (isOpen) {
+                closeCustomDropdown(dropdownId);
+            } else {
+                trigger.classList.add('open');
+                menu.classList.add('open');
+                activeOpenDropdownId = dropdownId;
+            }
+        }
+
+        function closeCustomDropdown(dropdownId) {
+            const trigger = document.getElementById(`trigger-${dropdownId}`);
+            const menu = document.getElementById(`menu-${dropdownId}`);
+            if (trigger) trigger.classList.remove('open');
+            if (menu) menu.classList.remove('open');
+            if (activeOpenDropdownId === dropdownId) {
+                activeOpenDropdownId = null;
+            }
+        }
+
+        function closeAllCustomDropdowns() {
+            ['sortFilter', 'habitCategory', 'freqInterval', 'freqWeekly'].forEach(id => closeCustomDropdown(id));
+        }
+
+        // Global outside-click listener for custom dropdowns
+        document.addEventListener('click', (e) => {
+            if (!activeOpenDropdownId) return;
+            const container = document.getElementById(`dropdown-${activeOpenDropdownId}`);
+            if (container && !container.contains(e.target)) {
+                closeCustomDropdown(activeOpenDropdownId);
+            }
+        });
+
+        // 4-1. Sort Filter Custom Dropdown
+        function renderSortFilterDropdown() {
+            const currentOption = SORT_OPTIONS.find(o => o.value === currentSortBy) || SORT_OPTIONS[0];
+            document.getElementById('label-sortFilter').textContent = currentOption.label;
+
+            const menu = document.getElementById('menu-sortFilter');
+            menu.innerHTML = SORT_OPTIONS.map(opt => {
+                const isSelected = opt.value === currentSortBy;
+                return `
+                    <button type="button" onclick="selectSortOption('${opt.value}')"
+                        class="custom-select-option ${isSelected ? 'selected' : ''}">
+                        <span>${escapeHtml(opt.label)}</span>
+                        ${isSelected ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectSortOption(val) {
+            currentSortBy = val;
+            closeCustomDropdown('sortFilter');
+            renderSortFilterDropdown();
+            renderDashboard();
+        }
+
+        // 4-2. Habit Modal Category Custom Dropdown
+        function renderHabitCategoryDropdown(selectedCatId) {
+            const fallbackCat = appState.categories[0] || { id: 'uncategorized', name: '미분류', color: '#cbd5e1' };
+            const currentCat = appState.categories.find(c => c.id === selectedCatId) || fallbackCat;
+
+            document.getElementById('habitCategoryInput').value = currentCat.id;
+            document.getElementById('label-habitCategory').innerHTML = `
+                <span class="w-3 h-3 rounded-full shrink-0 border border-black/10" style="background-color: ${currentCat.color};"></span>
+                <span class="truncate">${escapeHtml(currentCat.name)}</span>
+            `;
+
+            const menu = document.getElementById('menu-habitCategory');
+            const optionsHtml = appState.categories.map(cat => {
+                const isSelected = cat.id === currentCat.id;
+                return `
+                    <button type="button" onclick="selectHabitCategoryOption('${cat.id}')"
+                        class="custom-select-option ${isSelected ? 'selected' : ''}">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="w-3 h-3 rounded-full shrink-0 border border-black/15" style="background-color: ${cat.color};"></span>
+                            <span class="truncate">${escapeHtml(cat.name)}</span>
+                        </span>
+                        ${isSelected ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            const bottomActionHtml = `
+                <button type="button" onclick="openInlineCategoryFromDropdown()" class="custom-select-action">
+                    <i class="ph-bold ph-plus-circle text-sm"></i>
+                    <span>+ 새 카테고리 직접 입력</span>
+                </button>
+            `;
+
+            menu.innerHTML = optionsHtml + bottomActionHtml;
+        }
+
+        function selectHabitCategoryOption(catId) {
+            closeCustomDropdown('habitCategory');
+            renderHabitCategoryDropdown(catId);
+        }
+
+        function openInlineCategoryFromDropdown() {
+            closeCustomDropdown('habitCategory');
+            const box = document.getElementById('inlineCategoryCreator');
+            box.classList.remove('hidden');
+            document.getElementById('inlineCatNameInput').focus();
+        }
+
+        // 4-3. N-Day Interval Custom Dropdown
+        function renderFreqIntervalDropdown(selectedVal) {
+            modalIntervalDays = parseInt(selectedVal, 10) || 2;
+            const currentOpt = INTERVAL_OPTIONS.find(o => o.value === modalIntervalDays) || INTERVAL_OPTIONS[0];
+            document.getElementById('label-freqInterval').textContent = currentOpt.label;
+
+            const menu = document.getElementById('menu-freqInterval');
+            menu.innerHTML = INTERVAL_OPTIONS.map(opt => {
+                const isSelected = opt.value === modalIntervalDays;
+                return `
+                    <button type="button" onclick="selectFreqIntervalOption(${opt.value})"
+                        class="custom-select-option ${isSelected ? 'selected' : ''}">
+                        <span>${escapeHtml(opt.label)}</span>
+                        ${isSelected ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectFreqIntervalOption(val) {
+            closeCustomDropdown('freqInterval');
+            renderFreqIntervalDropdown(val);
+        }
+
+        // 4-4. Weekly Count Custom Dropdown
+        function renderFreqWeeklyDropdown(selectedVal) {
+            modalWeeklyCount = parseInt(selectedVal, 10) || 3;
+            const currentOpt = WEEKLY_COUNT_OPTIONS.find(o => o.value === modalWeeklyCount) || WEEKLY_COUNT_OPTIONS[2];
+            document.getElementById('label-freqWeekly').textContent = currentOpt.label;
+
+            const menu = document.getElementById('menu-freqWeekly');
+            menu.innerHTML = WEEKLY_COUNT_OPTIONS.map(opt => {
+                const isSelected = opt.value === modalWeeklyCount;
+                return `
+                    <button type="button" onclick="selectFreqWeeklyOption(${opt.value})"
+                        class="custom-select-option ${isSelected ? 'selected' : ''}">
+                        <span>${escapeHtml(opt.label)}</span>
+                        ${isSelected ? '<i class="ph-bold ph-check text-xs"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectFreqWeeklyOption(val) {
+            closeCustomDropdown('freqWeekly');
+            renderFreqWeeklyDropdown(val);
+        }
+
+        /* =========================================================================
+           5. RICH 60+ ICON LIBRARY & CUSTOM ICON REGISTRATION
+           ========================================================================= */
+        function formatIconDisplayHTML(iconStr, sizeClass = 'text-xl') {
+            const val = (iconStr || '⭐').trim();
+            // Check if short Korean/alphanumeric text (non-emoji text badge)
+            const charLen = Array.from(val).length;
+            const isTextLabel = /^[가-힣a-zA-Z0-9]+$/.test(val) && charLen >= 2;
+            if (isTextLabel) {
+                return `<span class="icon-text-badge">${escapeHtml(val)}</span>`;
+            }
+            return `<span class="${sizeClass} leading-none">${escapeHtml(val)}</span>`;
+        }
+
+        function toggleIconPickerPanel() {
+            const panel = document.getElementById('iconPickerPanel');
+            const caret = document.getElementById('iconPickerCaret');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                caret.style.transform = 'rotate(180deg)';
+                renderIconPicker();
+            } else {
+                caret.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function setIconCategoryTab(tabKey) {
+            activeIconTab = tabKey;
+            renderIconPicker();
+        }
+
+        function renderIconPicker() {
+            const currentSelectedIcon = document.getElementById('habitIconInput').value || '💧';
+            const tabContainer = document.getElementById('iconCategoryTabs');
+            const gridContainer = document.getElementById('iconLibraryGrid');
+
+            const tabs = [
+                { key: 'all', label: '전체' },
+                { key: 'health', label: '건강/운동' },
+                { key: 'study', label: '학습/성장' },
+                { key: 'life', label: '생활/루틴' },
+                { key: 'hobby', label: '취미/마인드' },
+                { key: 'work', label: '생산성/재테크' },
+                { key: 'custom', label: `내 아이콘 (${appState.customIcons.length})` }
+            ];
+
+            tabContainer.innerHTML = tabs.map(t => {
+                const isActive = activeIconTab === t.key;
+                return `
+                    <button type="button" onclick="setIconCategoryTab('${t.key}')"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition border ${isActive ? '' : 'theme-border opacity-75 hover:opacity-100'}"
+                        style="${isActive ? 'background-color: var(--color-point); color: #0f172a; border-color: var(--color-hover);' : 'background-color: var(--bg-box);'}">
+                        ${escapeHtml(t.label)}
+                    </button>
+                `;
+            }).join('');
+
+            let iconsToDisplay = [];
+            if (activeIconTab === 'all') {
+                // Show custom icons first, then all preset categories
+                appState.customIcons.forEach(ic => iconsToDisplay.push({ icon: ic, isCustom: true }));
+                Object.values(ICON_LIBRARY).forEach(group => {
+                    group.icons.forEach(ic => {
+                        if (!iconsToDisplay.some(item => item.icon === ic)) {
+                            iconsToDisplay.push({ icon: ic, isCustom: false });
+                        }
+                    });
+                });
+            } else if (activeIconTab === 'custom') {
+                appState.customIcons.forEach(ic => iconsToDisplay.push({ icon: ic, isCustom: true }));
+            } else if (ICON_LIBRARY[activeIconTab]) {
+                ICON_LIBRARY[activeIconTab].icons.forEach(ic => iconsToDisplay.push({ icon: ic, isCustom: false }));
+            }
+
+            if (iconsToDisplay.length === 0) {
+                gridContainer.innerHTML = `
+                    <div class="col-span-full py-6 text-center text-xs theme-subtext">
+                        등록된 나만의 아이콘이 없습니다. 위 입력창에서 이모지나 단어를 등록해 보세요!
+                    </div>
+                `;
+                return;
+            }
+
+            gridContainer.innerHTML = iconsToDisplay.map(item => {
+                const isSelected = item.icon === currentSelectedIcon;
+                const encodedIcon = encodeURIComponent(item.icon);
+                return `
+                    <div class="relative group">
+                        <button type="button" onclick="selectHabitIcon(decodeURIComponent('${encodedIcon}'))"
+                            class="icon-grid-btn w-full ${isSelected ? 'active' : ''}"
+                            title="${escapeHtml(item.icon)} 선택">
+                            ${formatIconDisplayHTML(item.icon, 'text-lg')}
+                        </button>
+                        ${item.isCustom ? `
+                            <button type="button" onclick="deleteCustomIcon(decodeURIComponent('${encodedIcon}'), event)"
+                                class="hidden group-hover:flex absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white items-center justify-center text-[10px] shadow-xs"
+                                title="내 아이콘 삭제">
+                                <i class="ph-bold ph-x"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectHabitIcon(iconVal) {
+            document.getElementById('habitIconInput').value = iconVal;
+            document.getElementById('selectedIconPreview').innerHTML = formatIconDisplayHTML(iconVal, 'text-xl');
+            renderIconPicker();
+        }
+
+        function registerCustomIcon() {
+            const input = document.getElementById('customIconTextInput');
+            const raw = (input.value || '').trim();
+            if (!raw) {
+                showToast('추가할 이모지나 짧은 글자를 입력해 주세요.');
+                return;
+            }
+            const chars = Array.from(raw);
+            const trimmed = chars.slice(0, 4).join('');
+
+            if (!appState.customIcons.includes(trimmed)) {
+                appState.customIcons.unshift(trimmed);
+                saveState();
+            }
+
+            input.value = '';
+            selectHabitIcon(trimmed);
+            showToast(`'${trimmed}' 아이콘이 등록 및 선택되었습니다!`);
+        }
+
+        function deleteCustomIcon(iconVal, event) {
+            if (event) event.stopPropagation();
+            appState.customIcons = appState.customIcons.filter(i => i !== iconVal);
+            saveState();
+            if (document.getElementById('habitIconInput').value === iconVal) {
+                selectHabitIcon('💧');
+            } else {
+                renderIconPicker();
+            }
+            showToast(`'${iconVal}' 아이콘이 내 목록에서 삭제되었습니다.`);
+        }
+
+        /* =========================================================================
+           6. SCHEDULE / FREQUENCY & STREAK LOGIC
+           ========================================================================= */
+        function isHabitScheduledOnDate(habit, dateObj) {
+            const freq = habit.frequency || { type: 'daily' };
+            if (freq.type === 'daily') return true;
+            if (freq.type === 'interval') {
+                const step = Math.max(2, parseInt(freq.interval, 10) || 2);
+                const anchor = parseDateKeyLocal(freq.anchorDate || TODAY_KEY);
+                const diff = Math.abs(diffDaysLocal(dateObj, anchor));
+                return diff % step === 0;
+            }
+            if (freq.type === 'days') {
+                const daysArr = Array.isArray(freq.days) ? freq.days : [1, 2, 3, 4, 5];
+                return daysArr.includes(dateObj.getDay());
+            }
+            if (freq.type === 'weekly_count') {
+                return true;
+            }
+            return true;
+        }
+
+        function getFrequencyBadgeLabel(habit) {
+            const freq = habit.frequency || { type: 'daily' };
+            if (freq.type === 'daily') return '매일';
+            if (freq.type === 'interval') {
+                const step = parseInt(freq.interval, 10) || 2;
+                return step === 2 ? '이틀에 한 번' : `${step}일마다`;
+            }
+            if (freq.type === 'days') {
+                const map = { 1: '월', 2: '화', 3: '수', 4: '목', 5: '금', 6: '토', 0: '일' };
+                const order = [1, 2, 3, 4, 5, 6, 0];
+                const days = (freq.days || []).slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
+                if (days.length === 7) return '매일';
+                return days.map(d => map[d]).join('·') || '요일 미지정';
+            }
+            if (freq.type === 'weekly_count') {
+                return `주 ${freq.count || 3}회`;
+            }
+            return '매일';
+        }
+
+        function calculateStreak(habit) {
+            const checks = habit.checks || {};
+            const freq = habit.frequency || { type: 'daily' };
+            let streak = 0;
+
+            if (freq.type === 'weekly_count') {
+                for (let i = 0; i < 90; i++) {
+                    const d = addDays(TODAY, -i);
+                    const k = formatDateKey(d);
+                    if (checks[k]) {
+                        streak++;
+                    } else if (i > 0) {
+                        const mon = getMondayOfWeek(d);
+                        let wkCount = 0;
+                        for (let w = 0; w < 7; w++) {
+                            if (checks[formatDateKey(addDays(mon, w))]) wkCount++;
+                        }
+                        if (wkCount < (freq.count || 3) && d < getMondayOfWeek(TODAY)) {
+                            break;
+                        }
+                    }
+                }
+                return streak;
+            }
+
+            for (let i = 0; i < 120; i++) {
+                const d = addDays(TODAY, -i);
+                const k = formatDateKey(d);
+                const scheduled = isHabitScheduledOnDate(habit, d);
+
+                if (checks[k]) {
+                    streak++;
+                } else if (scheduled) {
+                    if (i === 0) continue;
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function getWeeklyHabitProgress(habit, weekDays) {
+            const checks = habit.checks || {};
+            const freq = habit.frequency || { type: 'daily' };
+
+            let achieved = 0;
+            weekDays.forEach(d => {
+                if (checks[d.key]) achieved++;
+            });
+
+            let target = 7;
+            if (freq.type === 'daily') {
+                target = 7;
+            } else if (freq.type === 'interval' || freq.type === 'days') {
+                target = weekDays.filter(d => isHabitScheduledOnDate(habit, d.dateObj)).length;
+                if (target === 0) target = 1;
+            } else if (freq.type === 'weekly_count') {
+                target = Math.min(7, Math.max(1, parseInt(freq.count, 10) || 3));
+            }
+
+            const rate = Math.min(100, Math.round((achieved / target) * 100));
+            return { achieved, target, rate };
+        }
+
+        function getWeekDates(weekOffset) {
+            const baseMonday = getMondayOfWeek(TODAY);
+            const targetMonday = addDays(baseMonday, weekOffset * 7);
+            const days = [];
+            const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+            for (let i = 0; i < 7; i++) {
+                const d = addDays(targetMonday, i);
+                days.push({
+                    dateObj: d,
+                    key: formatDateKey(d),
+                    dayName: dayNames[i],
+                    month: d.getMonth() + 1,
+                    date: d.getDate(),
+                    isToday: formatDateKey(d) === TODAY_KEY
+                });
+            }
+            return days;
+        }
+
+        /* =========================================================================
+           7. RENDER DASHBOARD
+           ========================================================================= */
+        function getFormattedTodayKoreanString() {
+            const korDays = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${TODAY.getFullYear()}년 ${TODAY.getMonth() + 1}월 ${TODAY.getDate()}일 (${korDays[TODAY.getDay()]}요일)`;
+        }
+
+        function renderLogoInnerHTML(logoType, logoValue) {
+            if (logoType === 'ph') {
+                return `<i class="ph-fill ${escapeHtml(logoValue)} text-2xl"></i>`;
+            }
+            const val = (logoValue || '✨').trim();
+            const charLen = Array.from(val).length;
+            const isTextLabel = /^[가-힣a-zA-Z0-9]+$/.test(val) && charLen >= 2;
+            if (isTextLabel) {
+                return `<span class="text-xs font-extrabold tracking-tight px-1">${escapeHtml(val)}</span>`;
+            }
+            return `<span class="text-xl leading-none">${escapeHtml(val)}</span>`;
+        }
+
+        function renderHeaderBranding() {
+            const cfg = appState.headerConfig || DEFAULT_HEADER_CONFIG;
+            const logoBox = document.getElementById('headerLogoBox');
+            const titleEl = document.getElementById('headerMainTitle');
+            const badgeEl = document.getElementById('headerBadgeText');
+            const subEl = document.getElementById('headerTodayText');
+
+            if (logoBox) {
+                logoBox.innerHTML = renderLogoInnerHTML(cfg.logoType, cfg.logoValue);
+            }
+            if (titleEl) {
+                titleEl.textContent = cfg.title || DEFAULT_HEADER_CONFIG.title;
+            }
+            if (badgeEl) {
+                if (cfg.badge && cfg.badge.trim() !== '') {
+                    badgeEl.textContent = cfg.badge.trim();
+                    badgeEl.classList.remove('hidden');
+                } else {
+                    badgeEl.classList.add('hidden');
+                }
+            }
+            if (subEl) {
+                const todayStr = getFormattedTodayKoreanString();
+                const sloganText = (cfg.slogan || '').trim();
+                let finalSub = '';
+                if (cfg.showDate && sloganText) {
+                    finalSub = `${todayStr} · ${sloganText}`;
+                } else if (cfg.showDate && !sloganText) {
+                    finalSub = todayStr;
+                } else if (!cfg.showDate && sloganText) {
+                    finalSub = sloganText;
+                }
+                if (finalSub) {
+                    subEl.textContent = finalSub;
+                    subEl.classList.remove('hidden');
+                } else {
+                    subEl.classList.add('hidden');
+                }
+            }
+        }
+
+        function renderDashboard() {
+            renderHeaderBranding();
+
+            const weekDays = getWeekDates(currentWeekOffset);
+            const weekLabel = formatKoreanWeekRangeLabel(weekDays);
+            document.getElementById('weekRangeLabel').textContent = weekLabel;
+
+            const btnThisWeek = document.getElementById('btnThisWeek');
+            btnThisWeek.style.opacity = currentWeekOffset === 0 ? '0.6' : '1';
+
+            renderCategoryTabs();
+            renderSortFilterDropdown();
+
+            const searchQuery = (document.getElementById('habitSearchInput')?.value || '').trim().toLowerCase();
+            let filteredHabits = appState.habits.filter(h => {
+                const matchCat = selectedCategoryFilter === 'ALL' || h.categoryId === selectedCategoryFilter;
+                const matchQuery = !searchQuery ||
+                    h.name.toLowerCase().includes(searchQuery) ||
+                    (h.goal && h.goal.toLowerCase().includes(searchQuery));
+                return matchCat && matchQuery;
+            });
+
+            // Apply Custom Sort Option
+            filteredHabits = filteredHabits.slice().sort((a, b) => {
+                if (currentSortBy === 'category') {
+                    return (a.categoryId || '').localeCompare(b.categoryId || '');
+                }
+                if (currentSortBy === 'streak_desc') {
+                    return calculateStreak(b) - calculateStreak(a);
+                }
+                if (currentSortBy === 'rate_desc') {
+                    return getWeeklyHabitProgress(b, weekDays).rate - getWeeklyHabitProgress(a, weekDays).rate;
+                }
+                if (currentSortBy === 'today_first') {
+                    const aSched = isHabitScheduledOnDate(a, TODAY) ? 1 : 0;
+                    const bSched = isHabitScheduledOnDate(b, TODAY) ? 1 : 0;
+                    return bSched - aSched;
+                }
+                return 0;
+            });
+
+            renderWeeklyMatrix(weekDays, filteredHabits);
+            updateSummaryCards(weekDays);
+        }
+
+        function getCategoryById(catId) {
+            return appState.categories.find(c => c.id === catId) || {
+                id: 'uncategorized',
+                name: '미분류',
+                color: '#cbd5e1'
+            };
+        }
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryFilterTabs');
+            const totalCount = appState.habits.length;
+
+            let html = `
+                <button onclick="setCategoryFilter('ALL')"
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${selectedCategoryFilter === 'ALL' ? 'shadow-2xs' : 'theme-border opacity-75 hover:opacity-100'}"
+                    style="${selectedCategoryFilter === 'ALL' ? 'background-color: var(--color-point); color: #0f172a; border-color: var(--color-hover);' : 'background-color: transparent;'}">
+                    <span>전체</span>
+                    <span class="px-1.5 py-0.2 rounded-full text-[11px] bg-black/10">${totalCount}</span>
+                </button>
+            `;
+
+            appState.categories.forEach(cat => {
+                const count = appState.habits.filter(h => h.categoryId === cat.id).length;
+                const isActive = selectedCategoryFilter === cat.id;
+
+                html += `
+                    <button onclick="setCategoryFilter('${cat.id}')"
+                        class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${isActive ? 'shadow-2xs scale-[1.02]' : 'theme-border opacity-85 hover:opacity-100'}"
+                        style="${isActive ? `background-color: ${cat.color}; color: #0f172a; border-color: #0f172a20;` : 'background-color: transparent;'}">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${cat.color};"></span>
+                        <span>${escapeHtml(cat.name)}</span>
+                        <span class="text-[11px] opacity-75">${count}</span>
+                    </button>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function setCategoryFilter(catId) {
+            selectedCategoryFilter = catId;
+            renderDashboard();
+        }
+
+        function renderWeeklyMatrix(weekDays, habits) {
+            const headerRow = document.getElementById('matrixHeaderRow');
+            const tbody = document.getElementById('matrixBody');
+            const emptyState = document.getElementById('emptyHabitState');
+
+            let headerHtml = `<th class="py-3 px-5 font-bold w-80">습관 및 일일 목표</th>`;
+            weekDays.forEach(d => {
+                headerHtml += `
+                    <th class="py-2.5 px-1.5 text-center w-14">
+                        <div class="inline-flex flex-col items-center justify-center px-2.5 py-1 ${d.isToday ? 'today-column-header shadow-2xs' : ''}">
+                            <span class="text-[11px] font-semibold">${d.dayName}</span>
+                            <span class="text-xs font-extrabold">${d.date}</span>
+                        </div>
+                    </th>
+                `;
+            });
+            headerHtml += `
+                <th class="py-3 px-4 text-center font-bold w-36">주간 달성률</th>
+                <th class="py-3 px-3 text-center font-bold w-24">연속 달성</th>
+                <th class="py-3 px-5 text-right font-bold w-24">관리</th>
+            `;
+            headerRow.innerHTML = headerHtml;
+
+            if (habits.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let rowsHtml = '';
+            habits.forEach(habit => {
+                const cat = getCategoryById(habit.categoryId);
+                const streak = calculateStreak(habit);
+                const freqLabel = getFrequencyBadgeLabel(habit);
+                const progress = getWeeklyHabitProgress(habit, weekDays);
+
+                let dayCellsHtml = '';
+                weekDays.forEach(d => {
+                    const isChecked = !!(habit.checks && habit.checks[d.key]);
+                    const isScheduled = isHabitScheduledOnDate(habit, d.dateObj);
+                    const restClass = !isScheduled && !isChecked ? 'rest-day' : '';
+                    const tooltip = isScheduled
+                        ? `${d.month}월 ${d.date}일 (${d.dayName}) 실천 예정일`
+                        : `${d.month}월 ${d.date}일 (${d.dayName}) 쉬는 날 (클릭 시 추가 달성 기록)`;
+
+                    dayCellsHtml += `
+                        <td class="py-3 px-1.5 text-center align-middle">
+                            <button onclick="toggleHabitCheck('${habit.id}', '${d.key}')"
+                                class="check-cell ${restClass} ${isChecked ? 'checked' : ''}"
+                                title="${tooltip}">
+                                ${isChecked ? '<i class="ph-bold ph-check text-sm"></i>' : ''}
+                            </button>
+                        </td>
+                    `;
+                });
+
+                rowsHtml += `
+                    <tr class="hover:bg-black/[0.015] transition">
+                        <!-- Habit Title, Category Badge, Frequency Badge & Goal -->
+                        <td class="py-3.5 px-5 align-middle">
+                            <div class="flex items-start gap-3">
+                                <div class="habit-avatar-box mt-0.5">
+                                    ${formatIconDisplayHTML(habit.icon || '⭐', 'text-xl')}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-bold inline-flex items-center"
+                                            style="background-color: ${cat.color}; color: #0f172a;">
+                                            ${escapeHtml(cat.name)}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold border theme-border theme-subtext"
+                                            style="background-color: var(--bg-main);">
+                                            ${escapeHtml(freqLabel)}
+                                        </span>
+                                        <span class="font-bold text-sm sm:text-base truncate">${escapeHtml(habit.name)}</span>
+                                    </div>
+                                    ${habit.goal ? `<p class="text-xs theme-subtext mt-1 truncate">${escapeHtml(habit.goal)}</p>` : ''}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Mon ~ Sun Checkboxes -->
+                        ${dayCellsHtml}
+
+                        <!-- Weekly Progress -->
+                        <td class="py-3 px-4 text-center align-middle">
+                            <div class="text-xs font-bold">${progress.achieved} / ${progress.target}회 <span class="theme-subtext font-normal">(${progress.rate}%)</span></div>
+                            <div class="w-full h-1.5 rounded-full mt-1.5 overflow-hidden" style="background-color: color-mix(in srgb, var(--border-color) 75%, transparent);">
+                                <div class="progress-fill h-full rounded-full" style="width: ${progress.rate}%;"></div>
+                            </div>
+                        </td>
+
+                        <!-- Simplified Streak Badge ("7일") -->
+                        <td class="py-3 px-3 text-center align-middle">
+                            <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold inline-flex items-center gap-1 ${streak > 0 ? 'badge-sub-accent shadow-2xs' : 'theme-subtext border theme-border'}">
+                                ${streak > 0 ? `🔥 ${streak}일` : '0일'}
+                            </span>
+                        </td>
+
+                        <!-- Direct Edit / Delete Actions -->
+                        <td class="py-3 px-5 text-right align-middle">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="openHabitModal('${habit.id}')" class="p-2 rounded-lg border theme-border hover:opacity-80" title="습관 수정">
+                                    <i class="ph-bold ph-pencil-simple text-xs"></i>
+                                </button>
+                                <button onclick="deleteHabit('${habit.id}')" class="p-2 rounded-lg border theme-border text-rose-500 hover:bg-rose-500/10" title="습관 삭제">
+                                    <i class="ph-bold ph-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rowsHtml;
+        }
+
+        function updateSummaryCards(weekDays) {
+            let todayScheduledCount = 0;
+            let todayDoneCount = 0;
+
+            appState.habits.forEach(h => {
+                const isScheduledToday = isHabitScheduledOnDate(h, TODAY);
+                const isCheckedToday = !!(h.checks && h.checks[TODAY_KEY]);
+                if (isScheduledToday) {
+                    todayScheduledCount++;
+                    if (isCheckedToday) todayDoneCount++;
+                } else if (isCheckedToday) {
+                    todayScheduledCount++;
+                    todayDoneCount++;
+                }
+            });
+
+            const todayPercent = todayScheduledCount > 0 ? Math.round((todayDoneCount / todayScheduledCount) * 100) : 0;
+            document.getElementById('statTodayPercent').textContent = `${todayPercent}%`;
+            document.getElementById('statTodayFraction').textContent = `(${todayDoneCount}/${todayScheduledCount} 완료)`;
+            document.getElementById('statTodayBar').style.width = `${todayPercent}%`;
+
+            const badge = document.getElementById('statTodayBadge');
+            if (todayPercent === 100 && todayScheduledCount > 0) {
+                badge.textContent = '달성 완료';
+            } else if (todayPercent >= 50) {
+                badge.textContent = '순항 중';
+            } else {
+                badge.textContent = '진행 중';
+            }
+
+            let totalWeekTarget = 0;
+            let totalWeekAchieved = 0;
+            appState.habits.forEach(h => {
+                const prog = getWeeklyHabitProgress(h, weekDays);
+                totalWeekTarget += prog.target;
+                totalWeekAchieved += Math.min(prog.achieved, prog.target);
+            });
+
+            const weekPercent = totalWeekTarget > 0 ? Math.round((totalWeekAchieved / totalWeekTarget) * 100) : 0;
+            document.getElementById('statWeekPercent').textContent = `${weekPercent}%`;
+            document.getElementById('statWeekFraction').textContent = `(${totalWeekAchieved}/${totalWeekTarget}회)`;
+            document.getElementById('statWeekBar').style.width = `${weekPercent}%`;
+            document.getElementById('statWeekRangeMini').textContent =
+                currentWeekOffset === 0 ? '이번 주' : (currentWeekOffset < 0 ? `${Math.abs(currentWeekOffset)}주 전` : `${currentWeekOffset}주 후`);
+
+            let bestStreak = 0;
+            let bestHabitName = '기록 없음';
+            appState.habits.forEach(h => {
+                const s = calculateStreak(h);
+                if (s > bestStreak) {
+                    bestStreak = s;
+                    bestHabitName = `${h.icon || ''} ${h.name}`;
+                }
+            });
+            document.getElementById('statBestStreak').textContent = `${bestStreak}일`;
+            document.getElementById('statBestStreakHabit').textContent = bestHabitName;
+        }
+
+        /* =========================================================================
+           8. USER INTERACTIONS: CHECK TOGGLE & WEEK NAVIGATION
+           ========================================================================= */
+        function toggleHabitCheck(habitId, dateKey) {
+            const habit = appState.habits.find(h => h.id === habitId);
+            if (!habit) return;
+            if (!habit.checks) habit.checks = {};
+            habit.checks[dateKey] = !habit.checks[dateKey];
+            saveState();
+            renderDashboard();
+        }
+
+        function changeWeek(delta) {
+            currentWeekOffset += delta;
+            renderDashboard();
+        }
+
+        function resetToCurrentWeek() {
+            currentWeekOffset = 0;
+            renderDashboard();
+        }
+
+        /* =========================================================================
+           9. HABIT ADD / EDIT MODAL WITH SCHEDULE & CUSTOM SELECTS
+           ========================================================================= */
+        function setFrequencyType(type) {
+            modalFreqType = type;
+            ['daily', 'interval', 'days', 'weekly_count'].forEach(t => {
+                const btn = document.getElementById(`freqBtn-${t}`);
+                const panel = document.getElementById(`freqConfig-${t}`);
+                if (t === type) {
+                    btn.style.backgroundColor = 'var(--color-point)';
+                    btn.style.borderColor = 'var(--color-hover)';
+                    btn.style.color = '#0f172a';
+                    panel.classList.remove('hidden');
+                } else {
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.borderColor = 'var(--border-color)';
+                    btn.style.color = 'var(--text-color)';
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleSpecificDay(dayNum) {
+            const idx = modalSelectedDays.indexOf(dayNum);
+            if (idx > -1) {
+                if (modalSelectedDays.length > 1) {
+                    modalSelectedDays.splice(idx, 1);
+                } else {
+                    showToast('최소 1개 이상의 요일을 선택해 주세요.');
+                }
+            } else {
+                modalSelectedDays.push(dayNum);
+            }
+            renderSpecificDayButtons();
+        }
+
+        function renderSpecificDayButtons() {
+            [1, 2, 3, 4, 5, 6, 0].forEach(d => {
+                const btn = document.getElementById(`dayBtn-${d}`);
+                if (!btn) return;
+                if (modalSelectedDays.includes(d)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function openHabitModal(editHabitId = null) {
+            const modal = document.getElementById('habitModal');
+            const title = document.getElementById('habitModalTitle');
+            document.getElementById('inlineCategoryCreator').classList.add('hidden');
+            document.getElementById('iconPickerPanel').classList.add('hidden');
+            document.getElementById('iconPickerCaret').style.transform = 'rotate(0deg)';
+            closeAllCustomDropdowns();
+
+            if (editHabitId) {
+                const habit = appState.habits.find(h => h.id === editHabitId);
+                if (!habit) return;
+                title.textContent = '습관 및 실천 주기 수정';
+                document.getElementById('habitIdInput').value = habit.id;
+                selectHabitIcon(habit.icon || '💧');
+                document.getElementById('habitNameInput').value = habit.name;
+                document.getElementById('habitGoalInput').value = habit.goal || '';
+                renderHabitCategoryDropdown(habit.categoryId);
+
+                const freq = habit.frequency || { type: 'daily' };
+                setFrequencyType(freq.type || 'daily');
+                renderFreqIntervalDropdown(freq.interval || 2);
+                document.getElementById('freqIntervalAnchor').value = freq.anchorDate || TODAY_KEY;
+                modalSelectedDays = Array.isArray(freq.days) && freq.days.length > 0 ? [...freq.days] : [1, 3, 5];
+                renderSpecificDayButtons();
+                renderFreqWeeklyDropdown(freq.count || 3);
+            } else {
+                title.textContent = '새 습관 등록';
+                document.getElementById('habitIdInput').value = '';
+                selectHabitIcon('💧');
+                document.getElementById('habitNameInput').value = '';
+                document.getElementById('habitGoalInput').value = '';
+                const defaultCat = selectedCategoryFilter !== 'ALL' ? selectedCategoryFilter : (appState.categories[0]?.id || '');
+                renderHabitCategoryDropdown(defaultCat);
+
+                setFrequencyType('daily');
+                renderFreqIntervalDropdown(2);
+                document.getElementById('freqIntervalAnchor').value = TODAY_KEY;
+                modalSelectedDays = [1, 3, 5];
+                renderSpecificDayButtons();
+                renderFreqWeeklyDropdown(3);
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHabitModal() {
+            closeAllCustomDropdowns();
+            const modal = document.getElementById('habitModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function toggleInlineCategoryCreator() {
+            const box = document.getElementById('inlineCategoryCreator');
+            box.classList.toggle('hidden');
+            if (!box.classList.contains('hidden')) {
+                document.getElementById('inlineCatNameInput').focus();
+            }
+        }
+
+        function createInlineCategory() {
+            const nameInput = document.getElementById('inlineCatNameInput');
+            const colorInput = document.getElementById('inlineCatColorInput');
+            const name = nameInput.value.trim();
+            if (!name) {
+                showToast('새 카테고리 이름을 입력해 주세요.');
+                return;
+            }
+            const newCat = {
+                id: 'cat_' + Date.now(),
+                name: name,
+                color: colorInput.value
+            };
+            appState.categories.push(newCat);
+            saveState();
+            renderHabitCategoryDropdown(newCat.id);
+            nameInput.value = '';
+            document.getElementById('inlineCategoryCreator').classList.add('hidden');
+            renderDashboard();
+            showToast(`'${name}' 카테고리가 생성되어 선택되었습니다.`);
+        }
+
+        function buildFrequencyObjectFromModal() {
+            if (modalFreqType === 'interval') {
+                return {
+                    type: 'interval',
+                    interval: modalIntervalDays || 2,
+                    anchorDate: document.getElementById('freqIntervalAnchor').value || TODAY_KEY
+                };
+            }
+            if (modalFreqType === 'days') {
+                return {
+                    type: 'days',
+                    days: [...modalSelectedDays]
+                };
+            }
+            if (modalFreqType === 'weekly_count') {
+                return {
+                    type: 'weekly_count',
+                    count: modalWeeklyCount || 3
+                };
+            }
+            return { type: 'daily' };
+        }
+
+        function handleHabitSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('habitIdInput').value;
+            const icon = document.getElementById('habitIconInput').value || '💧';
+            const name = document.getElementById('habitNameInput').value.trim();
+            const goal = document.getElementById('habitGoalInput').value.trim();
+            const categoryId = document.getElementById('habitCategoryInput').value;
+            const frequency = buildFrequencyObjectFromModal();
+
+            if (!name) return;
+
+            if (id) {
+                const existing = appState.habits.find(h => h.id === id);
+                if (existing) {
+                    existing.icon = icon;
+                    existing.name = name;
+                    existing.goal = goal;
+                    existing.categoryId = categoryId;
+                    existing.frequency = frequency;
+                }
+                showToast(`'${name}' 습관 설정이 수정되었습니다.`);
+            } else {
+                appState.habits.push({
+                    id: 'hab_' + Date.now(),
+                    name,
+                    goal,
+                    icon,
+                    categoryId,
+                    frequency,
+                    checks: {}
+                });
+                showToast(`'${name}' 습관이 등록되었습니다!`);
+            }
+
+            saveState();
+            closeHabitModal();
+            renderDashboard();
+        }
+
+        function deleteHabit(habitId) {
+            const idx = appState.habits.findIndex(h => h.id === habitId);
+            if (idx === -1) return;
+            const removed = appState.habits[idx];
+            appState.habits.splice(idx, 1);
+            saveState();
+            renderDashboard();
+            showToast(`'${removed.name}' 습관이 삭제되었습니다.`);
+        }
+
+        /* =========================================================================
+           10. NO-CODE CATEGORY MANAGER MODAL LOGIC (LIVE EDIT NAME & COLOR)
+           ========================================================================= */
+        function openCategoryModal() {
+            renderCategoryManagerList();
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderCategoryManagerList() {
+            const list = document.getElementById('categoryManagerList');
+            if (appState.categories.length === 0) {
+                list.innerHTML = `<p class="text-xs theme-subtext text-center py-4">등록된 카테고리가 없습니다. 위에서 추가해 보세요!</p>`;
+                return;
+            }
+
+            list.innerHTML = appState.categories.map(cat => {
+                const count = appState.habits.filter(h => h.categoryId === cat.id).length;
+                return `
+                    <div class="p-3 rounded-xl border theme-border flex items-center justify-between gap-3" style="background-color: var(--bg-main);">
+                        <div class="flex items-center gap-2.5 flex-1">
+                            <input type="color" value="${normalizeHex(cat.color)}"
+                                oninput="updateCategoryLive('${cat.id}', 'color', this.value)"
+                                title="카테고리 색상 변경">
+                            <input type="text" value="${escapeHtml(cat.name)}" maxlength="20"
+                                oninput="updateCategoryLive('${cat.id}', 'name', this.value)"
+                                class="flex-1 px-2.5 py-1.5 rounded-lg border theme-border bg-transparent text-xs sm:text-sm font-bold accent-ring">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold" style="background-color: ${cat.color}; color: #0f172a;">
+                                습관 ${count}개
+                            </span>
+                            <button onclick="deleteCategory('${cat.id}')"
+                                class="p-1.5 rounded-lg border theme-border text-rose-500 hover:bg-rose-500/10" title="카테고리 삭제">
+                                <i class="ph-bold ph-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCategoryLive(catId, field, value) {
+            const cat = appState.categories.find(c => c.id === catId);
+            if (!cat) return;
+            cat[field] = value;
+            saveState();
+            renderDashboard();
+            if (field === 'color') {
+                renderCategoryManagerList();
+            }
+        }
+
+        function addNewCategoryFromManager() {
+            const nameInput = document.getElementById('newCategoryName');
+            const colorInput = document.getElementById('newCategoryColor');
+            const name = nameInput.value.trim();
+            if (!name) {
+                showToast('카테고리 이름을 입력해 주세요.');
+                return;
+            }
+            appState.categories.push({
+                id: 'cat_' + Date.now(),
+                name,
+                color: colorInput.value
+            });
+            nameInput.value = '';
+            saveState();
+            renderCategoryManagerList();
+            renderDashboard();
+            showToast(`'${name}' 카테고리가 추가되었습니다.`);
+        }
+
+        function deleteCategory(catId) {
+            if (appState.categories.length <= 1) {
+                showToast('최소 1개의 카테고리는 유지되어야 합니다.');
+                return;
+            }
+            const idx = appState.categories.findIndex(c => c.id === catId);
+            if (idx === -1) return;
+            const removed = appState.categories[idx];
+            appState.categories.splice(idx, 1);
+
+            const fallbackId = appState.categories[0].id;
+            appState.habits.forEach(h => {
+                if (h.categoryId === catId) h.categoryId = fallbackId;
+            });
+
+            if (selectedCategoryFilter === catId) {
+                selectedCategoryFilter = 'ALL';
+            }
+
+            saveState();
+            renderCategoryManagerList();
+            renderDashboard();
+            showToast(`'${removed.name}' 카테고리가 삭제되었습니다.`);
+        }
+
+        /* =========================================================================
+           10-B. HEADER & LOGO CUSTOMIZATION MODAL LOGIC
+           ========================================================================= */
+        let tempHeaderLogoType = 'ph';
+        let tempHeaderLogoValue = 'ph-check-square-offset';
+
+        function openHeaderModal() {
+            const cfg = appState.headerConfig || DEFAULT_HEADER_CONFIG;
+            tempHeaderLogoType = cfg.logoType || 'ph';
+            tempHeaderLogoValue = cfg.logoValue || 'ph-check-square-offset';
+
+            document.getElementById('headerTitleInput').value = cfg.title ?? DEFAULT_HEADER_CONFIG.title;
+            document.getElementById('headerBadgeInput').value = cfg.badge ?? DEFAULT_HEADER_CONFIG.badge;
+            document.getElementById('headerSloganInput').value = cfg.slogan ?? DEFAULT_HEADER_CONFIG.slogan;
+            document.getElementById('headerShowDateCheck').checked = cfg.showDate !== false;
+
+            const customInput = document.getElementById('headerCustomLogoInput');
+            if (tempHeaderLogoType === 'text' && !HEADER_EMOJI_PRESETS.includes(tempHeaderLogoValue)) {
+                customInput.value = tempHeaderLogoValue;
+            } else {
+                customInput.value = '';
+            }
+
+            renderHeaderLogoGrids();
+            updateHeaderModalPreview();
+
+            const modal = document.getElementById('headerModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHeaderModal() {
+            const modal = document.getElementById('headerModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderHeaderLogoGrids() {
+            const svgGrid = document.getElementById('headerSvgLogoGrid');
+            const emojiGrid = document.getElementById('headerEmojiLogoGrid');
+
+            svgGrid.innerHTML = HEADER_SVG_PRESETS.map(item => {
+                const isActive = tempHeaderLogoType === 'ph' && tempHeaderLogoValue === item.id;
+                return `
+                    <button type="button" onclick="selectHeaderPresetLogo('ph', '${item.id}')"
+                        class="logo-preset-btn ${isActive ? 'active' : ''}" title="${escapeHtml(item.label)}">
+                        <i class="ph-fill ${item.id}"></i>
+                    </button>
+                `;
+            }).join('');
+
+            emojiGrid.innerHTML = HEADER_EMOJI_PRESETS.map(emo => {
+                const isActive = tempHeaderLogoType === 'text' && tempHeaderLogoValue === emo;
+                const encoded = encodeURIComponent(emo);
+                return `
+                    <button type="button" onclick="selectHeaderPresetLogo('text', decodeURIComponent('${encoded}'))"
+                        class="logo-preset-btn ${isActive ? 'active' : ''}" title="${escapeHtml(emo)} 선택">
+                        <span>${escapeHtml(emo)}</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectHeaderPresetLogo(type, value) {
+            tempHeaderLogoType = type;
+            tempHeaderLogoValue = value;
+            document.getElementById('headerCustomLogoInput').value = '';
+            renderHeaderLogoGrids();
+            updateHeaderModalPreview();
+        }
+
+        function onCustomHeaderLogoInput(rawVal) {
+            const trimmed = Array.from((rawVal || '').trim()).slice(0, 4).join('');
+            if (trimmed) {
+                tempHeaderLogoType = 'text';
+                tempHeaderLogoValue = trimmed;
+            } else {
+                tempHeaderLogoType = 'ph';
+                tempHeaderLogoValue = 'ph-check-square-offset';
+            }
+            renderHeaderLogoGrids();
+            updateHeaderModalPreview();
+        }
+
+        function updateHeaderModalPreview() {
+            const titleVal = document.getElementById('headerTitleInput').value.trim() || '제목을 입력하세요';
+            const badgeVal = document.getElementById('headerBadgeInput').value.trim();
+            const sloganVal = document.getElementById('headerSloganInput').value.trim();
+            const showDate = document.getElementById('headerShowDateCheck').checked;
+
+            const previewLogoBox = document.getElementById('previewHeaderLogoBox');
+            const previewTitle = document.getElementById('previewHeaderTitle');
+            const previewBadge = document.getElementById('previewHeaderBadge');
+            const previewSlogan = document.getElementById('previewHeaderSlogan');
+
+            previewLogoBox.innerHTML = renderLogoInnerHTML(tempHeaderLogoType, tempHeaderLogoValue);
+            previewTitle.textContent = titleVal;
+
+            if (badgeVal) {
+                previewBadge.textContent = badgeVal;
+                previewBadge.classList.remove('hidden');
+            } else {
+                previewBadge.classList.add('hidden');
+            }
+
+            const todayStr = getFormattedTodayKoreanString();
+            let subText = '';
+            if (showDate && sloganVal) {
+                subText = `${todayStr} · ${sloganVal}`;
+            } else if (showDate && !sloganVal) {
+                subText = todayStr;
+            } else if (!showDate && sloganVal) {
+                subText = sloganVal;
+            }
+
+            if (subText) {
+                previewSlogan.textContent = subText;
+                previewSlogan.classList.remove('hidden');
+            } else {
+                previewSlogan.classList.add('hidden');
+            }
+        }
+
+        function resetHeaderConfigToDefault() {
+            tempHeaderLogoType = DEFAULT_HEADER_CONFIG.logoType;
+            tempHeaderLogoValue = DEFAULT_HEADER_CONFIG.logoValue;
+            document.getElementById('headerTitleInput').value = DEFAULT_HEADER_CONFIG.title;
+            document.getElementById('headerBadgeInput').value = DEFAULT_HEADER_CONFIG.badge;
+            document.getElementById('headerSloganInput').value = DEFAULT_HEADER_CONFIG.slogan;
+            document.getElementById('headerShowDateCheck').checked = DEFAULT_HEADER_CONFIG.showDate;
+            document.getElementById('headerCustomLogoInput').value = '';
+            renderHeaderLogoGrids();
+            updateHeaderModalPreview();
+            showToast('헤더 설정이 기본값으로 복원되었습니다. 저장하기를 누르면 반영됩니다.');
+        }
+
+        function saveHeaderConfig(e) {
+            e.preventDefault();
+            const titleVal = document.getElementById('headerTitleInput').value.trim() || DEFAULT_HEADER_CONFIG.title;
+            const badgeVal = document.getElementById('headerBadgeInput').value.trim();
+            const sloganVal = document.getElementById('headerSloganInput').value.trim();
+            const showDate = document.getElementById('headerShowDateCheck').checked;
+
+            appState.headerConfig = {
+                logoType: tempHeaderLogoType,
+                logoValue: tempHeaderLogoValue,
+                title: titleVal,
+                badge: badgeVal,
+                slogan: sloganVal,
+                showDate: showDate
+            };
+
+            saveState();
+            renderHeaderBranding();
+            closeHeaderModal();
+            showToast('상단 헤더와 로고 설정이 저장되었습니다!');
+        }
+
+        /* =========================================================================
+           11. UTILITIES (TOAST & HTML ESCAPE)
+           ========================================================================= */
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'theme-box px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 border theme-border animate-pop';
+            toast.innerHTML = `<span class="w-2 h-2 rounded-full" style="background-color: var(--color-hover);"></span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.25s ease';
+                setTimeout(() => toast.remove(), 250);
+            }, 2200);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            applyCurrentThemeToDOM();
+            renderDashboard();
+        });
+    </script>
+</body>
+</html>
